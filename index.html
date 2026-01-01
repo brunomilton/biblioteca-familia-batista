@@ -108,13 +108,43 @@
     $("status").textContent = msg;
   }
 
-  function api(action, payload={}) {
-    return fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action, idToken: ID_TOKEN, ...payload })
-    }).then(r => r.json());
-  }
+  function api(action, payload = {}) {
+  return new Promise((resolve, reject) => {
+    const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+
+    window[cb] = (data) => {
+      try { delete window[cb]; } catch(e) {}
+      script.remove();
+      resolve(data);
+    };
+
+    const params = new URLSearchParams();
+    params.set("callback", cb);
+    params.set("action", action);
+    params.set("idToken", ID_TOKEN);
+
+    // payload básico
+    if (payload.limit != null) params.set("limit", String(payload.limit));
+    if (payload.query != null) params.set("query", String(payload.query));
+    if (payload.offset != null) params.set("offset", String(payload.offset));
+    if (payload.isbn != null) params.set("isbn", String(payload.isbn));
+
+    // extras (JSON)
+    if (payload.extras != null) {
+      params.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
+    }
+
+    const script = document.createElement("script");
+    script.src = API_URL + "?" + params.toString();
+    script.onerror = () => {
+      try { delete window[cb]; } catch(e) {}
+      script.remove();
+      reject(new Error("Falha ao chamar API (JSONP)."));
+    };
+
+    document.body.appendChild(script);
+  });
+}
 
 function initLogin() {
   const start = () => {
@@ -174,21 +204,36 @@ function initLogin() {
 }
 
   async function cadastrar() {
-    if (!ID_TOKEN) { setLoading(false, "Faça login antes."); return; }
-    const isbn = $("isbn").value.trim();
-    if (!isbn) return;
+  if (!ID_TOKEN) { setLoading(false, "Faça login antes."); return; }
 
-    setLoading(true, "Buscando...");
-    const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
+  const isbn = $("isbn").value.trim();
+  if (!isbn) return;
+
+  // regra simples: exigir 13 dígitos (ISBN/EAN-13)
+  if (!/^\d{13}$/.test(isbn)) {
+    setLoading(false, "O código lido não é ISBN-13 (precisa ter 13 dígitos). Tente novamente.");
+    return;
+  }
+
+  setLoading(true, "Buscando...");
+  const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
+
+  try {
     const res = await api("cadastrar", { isbn, extras });
-    if (!res.ok) { setLoading(false, res.message || "Falhou."); return; }
+    if (!res || !res.ok) {
+      setLoading(false, (res && res.message) ? res.message : "Falhou.");
+      return;
+    }
 
     setLoading(false, `✅ ${res.action === "updated" ? "Atualizado" : "Cadastrado"}: ${(res.meta && res.meta.title) || ""}`);
     $("isbn").value = "";
     $("isbn").focus();
     carregarRecentes();
     buscar();
+  } catch (e) {
+    setLoading(false, "Erro: " + (e?.message || e));
   }
+}
 
   async function carregarRecentes() {
     if (!ID_TOKEN) return;
@@ -246,7 +291,9 @@ function initLogin() {
 
     await codeReader.decodeFromVideoDevice(backCam?.deviceId, video, (result) => {
       if (result) {
-        $("isbn").value = result.getText();
+        const raw = result.getText().replace(/\D/g, "");
+      if (raw.length !== 13) return; // ignora EAN-8, etc.
+        $("isbn").value = raw;
         $("scanStatus").textContent = "✅ Detectado";
         fecharScanner();
         $("isbn").focus();
