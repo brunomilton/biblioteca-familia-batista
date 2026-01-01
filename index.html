@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://unpkg.com/@zxing/browser@latest"></script>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin: 18px; }
+    .card { border:1px solid #ddd; border-radius:14px; padding:14px; margin-bottom:14px; }
+    input, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:16px; }
+    button { padding:10px 14px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-size:16px; }
+    button.alt { background:#fff; color:#111; }
+    button:disabled { opacity:.6; }
+    .small { color:#666; font-size:13px; }
+    .list { margin-top:10px; }
+    .item { padding:10px 0; border-top:1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <b>Acesso</b>
+    <div class="small" id="authStatus">Faça login para usar.</div>
+    <div id="gsiBtn" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px 0;">📚 Biblioteca - Família Batista</h2>
+    <div class="small">Cadastre por ISBN (digitando, leitor ou câmera).</div>
+  </div>
+
+  <div class="card">
+    <label><b>ISBN</b></label>
+    <input id="isbn" inputmode="numeric" placeholder="Ex.: 9788576082675" autocomplete="off">
+    <div style="height:10px"></div>
+
+    <label><b>Localização</b> <span class="small">(opcional)</span></label>
+    <input id="location" placeholder="Ex.: Estante sala, prateleira 2">
+    <div style="height:10px"></div>
+
+    <label><b>Observações</b> <span class="small">(opcional)</span></label>
+    <textarea id="notes" rows="2"></textarea>
+
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px;">
+      <button id="btn" onclick="cadastrar()">Cadastrar</button>
+      <button class="alt" onclick="abrirScanner()">📷 Escanear ISBN</button>
+      <span id="status" class="small"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <b>Últimos cadastrados</b>
+      <button class="alt" onclick="carregarRecentes()">Atualizar</button>
+    </div>
+    <div id="recentes" class="list"></div>
+  </div>
+
+  <div class="card">
+    <b>Acervo</b>
+    <div class="small">Busque por título, autor, editora, ISBN, ano, localização...</div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <input id="q" placeholder="Buscar...">
+      <button class="alt" onclick="buscar()">Buscar</button>
+    </div>
+    <div class="small" id="resumo" style="margin-top:8px;"></div>
+    <div id="acervo" class="list"></div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="alt" onclick="prev()">◀</button>
+      <button class="alt" onclick="next()">▶</button>
+    </div>
+  </div>
+
+  <div id="scannerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); padding:18px;">
+    <div style="background:#fff; border-radius:14px; padding:14px; max-width:680px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <b>Escanear ISBN</b>
+        <button class="alt" onclick="fecharScanner()">Fechar</button>
+      </div>
+      <div class="small" style="margin:8px 0 10px 0;">Aponte para o código de barras (EAN-13).</div>
+      <video id="video" style="width:100%; border-radius:12px; border:1px solid #ddd;" autoplay muted playsinline></video>
+      <div class="small" id="scanStatus" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+<script>
+  const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
+
+  // Sua URL do Apps Script (API)
+  const API_URL = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
+
+  let ID_TOKEN = "";
+  let OFFSET = 0;
+  const LIMIT = 50;
+  let codeReader = null;
+
+  const $ = id => document.getElementById(id);
+
+  $("isbn").addEventListener("keydown", e => { if (e.key === "Enter") cadastrar(); });
+
+  function setLoading(on, msg="") {
+    $("btn").disabled = on;
+    $("status").textContent = msg;
+  }
+
+  function api(action, payload={}) {
+    return fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action, idToken: ID_TOKEN, ...payload })
+    }).then(r => r.json());
+  }
+
+  function initLogin() {
+    google.accounts.id.initialize({
+      client_id: CLIENT_ID,
+      callback: (resp) => {
+        ID_TOKEN = resp.credential || "";
+        $("authStatus").textContent = "✅ Logado.";
+        carregarRecentes();
+        buscar();
+        $("isbn").focus();
+      }
+    });
+    google.accounts.id.renderButton($("gsiBtn"), { theme:"outline", size:"large", text:"signin_with" });
+  }
+
+  async function cadastrar() {
+    if (!ID_TOKEN) { setLoading(false, "Faça login antes."); return; }
+    const isbn = $("isbn").value.trim();
+    if (!isbn) return;
+
+    setLoading(true, "Buscando...");
+    const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
+    const res = await api("cadastrar", { isbn, extras });
+    if (!res.ok) { setLoading(false, res.message || "Falhou."); return; }
+
+    setLoading(false, `✅ ${res.action === "updated" ? "Atualizado" : "Cadastrado"}: ${(res.meta && res.meta.title) || ""}`);
+    $("isbn").value = "";
+    $("isbn").focus();
+    carregarRecentes();
+    buscar();
+  }
+
+  async function carregarRecentes() {
+    if (!ID_TOKEN) return;
+    const res = await api("recentes", { limit: 20 });
+    const el = $("recentes");
+    el.innerHTML = "";
+    (res.items || []).forEach(it => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML =
+        `<b>${esc(it.title||"(sem título)")}</b>
+         <div class="small">${esc(it.authors||"")}</div>
+         <div class="small">ISBN: ${esc(it.isbn||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.source||"")}</div>`;
+      el.appendChild(div);
+    });
+  }
+
+  function buscar() { OFFSET = 0; carregarPagina(); }
+  async function carregarPagina() {
+    const q = $("q").value.trim();
+    const res = await api("buscar", { query: q, offset: OFFSET, limit: LIMIT });
+    $("resumo").textContent = `Total: ${res.total} | Página: ${Math.floor(OFFSET/LIMIT)+1}`;
+    const el = $("acervo"); el.innerHTML = "";
+    (res.items||[]).forEach(it => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML =
+        `<b>${esc(it.title||"(sem título)")}</b>
+         <div class="small">${esc(it.authors||"")}</div>
+         <div class="small">ISBN: ${esc(it.isbn||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.location||"")}</div>`;
+      el.appendChild(div);
+    });
+  }
+  function next(){ OFFSET += LIMIT; carregarPagina(); }
+  function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
+
+  async function abrirScanner() {
+    if (!ID_TOKEN) { $("status").textContent = "Faça login antes de escanear."; return; }
+    $("scannerModal").style.display = "block";
+    $("scanStatus").textContent = "Abrindo câmera...";
+    try {
+      codeReader = new ZXing.BrowserMultiFormatReader();
+      const video = $("video");
+      const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+      const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
+      await codeReader.decodeFromVideoDevice(backCam?.deviceId, video, (result) => {
+        if (result) {
+          $("isbn").value = result.getText();
+          $("scanStatus").textContent = "✅ Detectado";
+          fecharScanner();
+          $("isbn").focus();
+        }
+      });
+      $("scanStatus").textContent = "Aponte para o código...";
+    } catch(e) {
+      $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
+    }
+  }
+
+  function fecharScanner() {
+    $("scannerModal").style.display = "none";
+    try { codeReader && codeReader.reset(); } catch(e){}
+    codeReader = null;
+  }
+
+  function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+
+  initLogin();
+</script>
+</body>
+</html>
