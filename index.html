@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" onload="window.__gsiLoaded=true"></script>
   <script src="https://unpkg.com/@zxing/browser@latest"></script>
   <style>
     body { font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin: 18px; }
@@ -113,19 +113,62 @@
     }).then(r => r.json());
   }
 
-  function initLogin() {
-    google.accounts.id.initialize({
-      client_id: CLIENT_ID,
-      callback: (resp) => {
-        ID_TOKEN = resp.credential || "";
-        $("authStatus").textContent = "✅ Logado.";
-        carregarRecentes();
-        buscar();
-        $("isbn").focus();
+function initLogin() {
+  const start = () => {
+    try {
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: (resp) => {
+          ID_TOKEN = resp.credential || "";
+          $("authStatus").textContent = "✅ Logado.";
+          $("fallbackLogin").style.display = "none";
+          carregarRecentes();
+          buscar();
+          $("isbn").focus();
+        }
+      });
+
+      // Tenta renderizar o botão oficial
+      google.accounts.id.renderButton($("gsiBtn"), {
+        theme: "outline",
+        size: "large",
+        text: "signin_with"
+      });
+
+      // Se por algum motivo o botão não aparecer, mostra fallback
+      setTimeout(() => {
+        const empty = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
+        if (empty) $("fallbackLogin").style.display = "inline-block";
+      }, 800);
+
+    } catch (e) {
+      // Se der qualquer erro, ativa fallback
+      $("fallbackLogin").style.display = "inline-block";
+      $("authStatus").textContent = "Toque em 'Entrar com Google'.";
+    }
+  };
+
+  // Espera o script carregar (iOS/Safari é chato com async/defer)
+  const wait = () => {
+    if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) start();
+    else setTimeout(wait, 120);
+  };
+  wait();
+}
+
+  function loginFallback() {
+  try {
+    // Mostra o “one tap / prompt” do Google
+    google.accounts.id.prompt((notification) => {
+      // Se o prompt não puder ser exibido, dá uma dica
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        $("authStatus").textContent = "Login não exibido. Tente abrir no Safari (não no modo embutido) e permita cookies.";
       }
     });
-    google.accounts.id.renderButton($("gsiBtn"), { theme:"outline", size:"large", text:"signin_with" });
+  } catch (e) {
+    $("authStatus").textContent = "Falha ao iniciar login. Recarregue a página.";
   }
+}
 
   async function cadastrar() {
     if (!ID_TOKEN) { setLoading(false, "Faça login antes."); return; }
