@@ -20,7 +20,10 @@
   <div class="card">
     <b>Acesso</b>
     <div class="small" id="authStatus">Faça login para usar.</div>
-    <div id="gsiBtn" style="margin-top:8px;"></div>
+    <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
+    <button id="fallbackLogin" class="alt" style="display:none; margin-top:8px;" onclick="loginFallback()">
+      Entrar com Google
+    </button>
   </div>
 
   <div class="card">
