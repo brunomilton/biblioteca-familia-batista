@@ -33,6 +33,26 @@
     .item { padding:10px 0; border-top:1px solid #eee; }
     .item:first-child { border-top:none; }
 
+    .rememberRow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    flex-wrap:nowrap;
+    }
+
+    .rememberRow input{
+    width:20px;
+    height:20px;
+    flex:0 0 auto;
+    }
+
+    .rememberRow span{
+    flex:1 1 auto;
+    white-space:normal;
+    word-break:break-word;
+    }
+
     .nav { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid #e6e6e6; display:flex; }
     .nav button { flex:1; border:none; border-radius:0; background:#fff; color:#111; padding:12px 6px; font-size:13px; }
     .nav button.active { font-weight:700; }
@@ -83,10 +103,10 @@
 
       <div id="diag" class="small" style="margin-top:8px;"></div>
       <div class="small" style="margin-top:8px;">
-        <label style="display:flex; gap:8px; align-items:center;">
-          <input type="checkbox" id="remember" checked>
-          Permanecer logado neste dispositivo
-        </label>
+      <label class="rememberRow">
+      <input type="checkbox" id="remember" checked>
+      <span>Permanecer logado neste dispositivo</span>
+      </label>
       </div>
     </div>
 
