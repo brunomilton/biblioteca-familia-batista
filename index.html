@@ -33,24 +33,25 @@
     .item { padding:10px 0; border-top:1px solid #eee; }
     .item:first-child { border-top:none; }
 
+    .item.clickable { cursor:pointer; }
+    .item.clickable:active { opacity:.75; }
+
     .rememberRow{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    width:100%;
-    flex-wrap:nowrap;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      flex-wrap:nowrap;
     }
-
     .rememberRow input{
-    width:20px;
-    height:20px;
-    flex:0 0 auto;
+      width:20px;
+      height:20px;
+      flex:0 0 auto;
     }
-
     .rememberRow span{
-    flex:1 1 auto;
-    white-space:normal;
-    word-break:break-word;
+      flex:1 1 auto;
+      white-space:normal;
+      word-break:break-word;
     }
 
     .nav { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid #e6e6e6; display:flex; }
@@ -67,6 +68,13 @@
     /* Modal manual */
     #manualModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); padding:14px; z-index:25; }
     #manualBox { background:#fff; border-radius:16px; padding:12px; max-width:720px; margin:0 auto; }
+
+    /* Modal detalhes */
+    #detailModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); padding:14px; z-index:40; overflow:auto; }
+    #detailBox { background:#fff; border-radius:16px; padding:12px; max-width:720px; margin:0 auto; }
+    .fieldHint { font-size:12px; color:#777; margin-top:6px; }
+    .twoCol { display:flex; gap:10px; flex-wrap:wrap; }
+    .twoCol > div { flex:1; min-width:160px; }
 
     .hidden { display:none !important; }
   </style>
@@ -103,10 +111,10 @@
 
       <div id="diag" class="small" style="margin-top:8px;"></div>
       <div class="small" style="margin-top:8px;">
-      <label class="rememberRow">
-      <input type="checkbox" id="remember" checked>
-      <span>Permanecer logado neste dispositivo</span>
-      </label>
+        <label class="rememberRow">
+          <input type="checkbox" id="remember" checked>
+          <span>Permanecer logado neste dispositivo</span>
+        </label>
       </div>
     </div>
 
@@ -298,6 +306,96 @@
     </div>
   </div>
 
+  <!-- Detalhes modal -->
+  <div id="detailModal">
+    <div id="detailBox">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <b>Detalhes da obra</b>
+          <div class="small" id="detailSubtitle"></div>
+        </div>
+        <div class="row">
+          <button class="alt" onclick="closeDetail()">Fechar</button>
+        </div>
+      </div>
+
+      <div class="small" id="detailStatus" style="margin-top:8px;"></div>
+
+      <div style="height:10px"></div>
+
+      <label><b>ID</b></label>
+      <input id="d_id" disabled>
+
+      <div style="height:10px"></div>
+
+      <div class="twoCol">
+        <div>
+          <label><b>ISBN</b> <span class="small">(travado)</span></label>
+          <input id="d_isbn" disabled>
+        </div>
+        <div>
+          <label><b>Fonte</b> <span class="small">(travado)</span></label>
+          <input id="d_fonte" disabled>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <label><b>Título</b></label>
+      <input id="d_titulo">
+
+      <div style="height:10px"></div>
+      <label><b>Autor(es)</b></label>
+      <input id="d_autores">
+
+      <div style="height:10px"></div>
+      <div class="twoCol">
+        <div>
+          <label><b>Editora</b></label>
+          <input id="d_editora">
+        </div>
+        <div>
+          <label><b>Edição</b></label>
+          <input id="d_edicao">
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <div class="twoCol">
+        <div>
+          <label><b>Ano</b></label>
+          <input id="d_ano" inputmode="numeric">
+        </div>
+        <div>
+          <label><b>Idioma</b></label>
+          <input id="d_idioma" placeholder="pt-BR">
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <label><b>Páginas</b></label>
+      <input id="d_paginas" inputmode="numeric">
+
+      <div style="height:10px"></div>
+      <label><b>Link</b></label>
+      <input id="d_link">
+
+      <div style="height:10px"></div>
+      <label><b>Localização</b></label>
+      <input id="d_localizacao">
+
+      <div style="height:10px"></div>
+      <label><b>Observações</b></label>
+      <textarea id="d_obs" rows="3"></textarea>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="btnDetailSave" onclick="saveDetail()">Salvar</button>
+        <span class="small" id="detailRoleHint"></span>
+      </div>
+
+      <div class="fieldHint" id="detailFooterHint"></div>
+    </div>
+  </div>
+
   <!-- ZXing -->
   <script type="module">
     import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
@@ -311,11 +409,34 @@
     // remember me (token no dispositivo)
     const STORAGE_KEY = "bib_id_token_v1";
 
+    // Cabeçalhos do seu CATALOGO (chaves que vêm do item_get)
+    const H = {
+      ID: "ID",
+      ISBN: "ISBN",
+      TITULO: "Título",
+      AUTORES: "Autor(es)",
+      EDITORA: "Editora",
+      EDICAO: "Edição",
+      ANO: "Ano",
+      IDIOMA: "Idioma",
+      PAGINAS: "Páginas",
+      FONTE: "Fonte",
+      LINK: "Link",
+      CADASTRADO: "Cadastrado_em",
+      LOCAL: "Localização",
+      OBS: "Observações",
+      ATUAL: "Atualizado_em",
+    };
+
     let ID_TOKEN = "";
     let ME = null; // {email, role}
     let OFFSET = 0;
     const LIMIT = 50;
     let codeReader = null;
+
+    // detalhes
+    let CURRENT_ITEM_ID = "";
+    let CURRENT_ITEM = null;
 
     const $ = id => document.getElementById(id);
 
@@ -347,6 +468,8 @@
       $("usersListCard").classList.add("hidden");
       $("btnCadastrar").disabled = true;
       $("btnManual").disabled = true;
+      // fecha modal se estiver aberto
+      closeDetail(true);
     }
 
     function setLoggedInUI_(email, role){
@@ -389,6 +512,7 @@
         if (payload.query != null) params.set("query", String(payload.query));
         if (payload.offset != null) params.set("offset", String(payload.offset));
         if (payload.isbn != null) params.set("isbn", String(payload.isbn));
+        if (payload.id != null) params.set("id", String(payload.id));
         if (payload.extras != null) params.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
         if (payload.payload != null) params.set("payload", encodeURIComponent(JSON.stringify(payload.payload)));
         if (payload.user != null) params.set("user", encodeURIComponent(JSON.stringify(payload.user)));
@@ -549,12 +673,13 @@
 
       (res.items || []).forEach(it => {
         const div = document.createElement("div");
-        div.className = "item";
+        div.className = "item clickable";
         div.innerHTML = `
           <b>${esc(it.title || "(sem título)")}</b>
           <div class="small">${esc(it.authors || "")}</div>
           <div class="small">ID: ${esc(it.id || "")} · ${esc(it.publisher || "")} · ${esc(it.year || "")} · ${esc(it.source || "")}</div>
         `;
+        div.addEventListener("click", () => openDetail(it.id));
         el.appendChild(div);
       });
     }
@@ -572,12 +697,13 @@
       el.innerHTML = "";
       (res.items || []).forEach(it => {
         const div = document.createElement("div");
-        div.className = "item";
+        div.className = "item clickable";
         div.innerHTML = `
           <b>${esc(it.title || "(sem título)")}</b>
           <div class="small">${esc(it.authors || "")}</div>
           <div class="small">ID: ${esc(it.id || "")} · ${esc(it.publisher || "")} · ${esc(it.year || "")} · ${esc(it.location || "")}</div>
         `;
+        div.addEventListener("click", () => openDetail(it.id));
         el.appendChild(div);
       });
     }
@@ -621,7 +747,7 @@
         await carregarRecentes();
         await buscar();
       } catch(e) {
-        $("statusManual").textContent = "Erro: " + (e?.message || e);
+        $("statusManual").textContent = "Erro: " + (e?.message || e));
       } finally {
         $("btnManual").disabled = false;
       }
@@ -636,6 +762,9 @@
 
       try {
         codeReader = new window.ZXing.BrowserMultiFormatReader();
+
+        // Nota: em alguns Android o label vem vazio antes da permissão.
+        // Ainda assim, o primeiro device costuma ser o padrão.
         const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
         const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
 
@@ -662,6 +791,175 @@
       codeReader = null;
     }
 
+    /************** DETALHES / EDIÇÃO **************/
+    function closeDetail(silent=false){
+      $("detailModal").style.display = "none";
+      CURRENT_ITEM_ID = "";
+      CURRENT_ITEM = null;
+      if (!silent) $("detailStatus").textContent = "";
+    }
+
+    function setDetailEditable_(role){
+      // Sempre travado:
+      $("d_id").disabled = true;
+      $("d_isbn").disabled = true;
+      $("d_fonte").disabled = true;
+
+      const isViewer = (role === "viewer");
+      const isEditor = (role === "editor");
+      const isAdmin  = (role === "admin");
+
+      // Campos editáveis por role:
+      const adminEditableIds = ["d_titulo","d_autores","d_editora","d_edicao","d_ano","d_idioma","d_paginas","d_link","d_localizacao","d_obs"];
+      const editorEditableIds = ["d_localizacao","d_obs"];
+      const viewerEditableIds = [];
+
+      // desabilita tudo primeiro
+      adminEditableIds.forEach(id => $(id).disabled = true);
+
+      if (isAdmin) {
+        adminEditableIds.forEach(id => $(id).disabled = false);
+        $("btnDetailSave").disabled = false;
+        $("detailRoleHint").textContent = "admin: pode editar quase tudo (ISBN/Fonte travados).";
+      } else if (isEditor) {
+        editorEditableIds.forEach(id => $(id).disabled = false);
+        $("btnDetailSave").disabled = false;
+        $("detailRoleHint").textContent = "editor: pode editar Localização e Observações.";
+      } else {
+        // viewer
+        $("btnDetailSave").disabled = true;
+        $("detailRoleHint").textContent = "viewer: somente leitura.";
+      }
+
+      $("detailFooterHint").textContent = isViewer
+        ? "Clique em Fechar para voltar."
+        : "Após editar, clique em Salvar.";
+    }
+
+    function fillDetailForm_(item){
+      $("d_id").value = item[H.ID] || "";
+      $("d_isbn").value = item[H.ISBN] || "";
+      $("d_fonte").value = item[H.FONTE] || "";
+      $("d_titulo").value = item[H.TITULO] || "";
+      $("d_autores").value = item[H.AUTORES] || "";
+      $("d_editora").value = item[H.EDITORA] || "";
+      $("d_edicao").value = item[H.EDICAO] || "";
+      $("d_ano").value = item[H.ANO] || "";
+      $("d_idioma").value = item[H.IDIOMA] || "";
+      $("d_paginas").value = item[H.PAGINAS] || "";
+      $("d_link").value = item[H.LINK] || "";
+      $("d_localizacao").value = item[H.LOCAL] || "";
+      $("d_obs").value = item[H.OBS] || "";
+
+      const sub = [
+        item[H.TITULO] ? String(item[H.TITULO]) : "(sem título)",
+        item[H.AUTORES] ? String(item[H.AUTORES]) : "",
+      ].filter(Boolean).join(" — ");
+      $("detailSubtitle").textContent = sub;
+    }
+
+    async function openDetail(id){
+      if (!ID_TOKEN) return;
+      if (!id) return;
+
+      CURRENT_ITEM_ID = id;
+      $("detailModal").style.display = "block";
+      $("detailStatus").textContent = "Carregando…";
+      $("btnDetailSave").disabled = true;
+
+      try {
+        const res = await api("item_get", { id: id });
+        if (!res || !res.ok) {
+          $("detailStatus").textContent = res?.message || "Erro ao carregar.";
+          return;
+        }
+
+        CURRENT_ITEM = res.item;
+        fillDetailForm_(CURRENT_ITEM);
+
+        // aplica permissões
+        setDetailEditable_(ME?.role || "viewer");
+
+        // status
+        const updated = CURRENT_ITEM[H.ATUAL] ? `Atualizado: ${CURRENT_ITEM[H.ATUAL]}` : "";
+        const created = CURRENT_ITEM[H.CADASTRADO] ? `Cadastrado: ${CURRENT_ITEM[H.CADASTRADO]}` : "";
+        $("detailStatus").textContent = [created, updated].filter(Boolean).join(" · ");
+
+      } catch(e) {
+        $("detailStatus").textContent = "Erro: " + (e?.message || e);
+      }
+    }
+
+    function collectDetailUpdates_(){
+      // envia updates usando as CHAVES do CATALOGO (com acento)
+      // Admin NÃO envia ISBN nem Fonte (travados por política)
+      const updates = {};
+
+      const role = ME?.role || "viewer";
+      if (role === "admin") {
+        updates[H.TITULO]  = $("d_titulo").value.trim();
+        updates[H.AUTORES] = $("d_autores").value.trim();
+        updates[H.EDITORA] = $("d_editora").value.trim();
+        updates[H.EDICAO]  = $("d_edicao").value.trim();
+        updates[H.ANO]     = $("d_ano").value.trim();
+        updates[H.IDIOMA]  = $("d_idioma").value.trim();
+        updates[H.PAGINAS] = $("d_paginas").value.trim();
+        updates[H.LINK]    = $("d_link").value.trim();
+        updates[H.LOCAL]   = $("d_localizacao").value.trim();
+        updates[H.OBS]     = $("d_obs").value.trim();
+      } else if (role === "editor") {
+        updates[H.LOCAL] = $("d_localizacao").value.trim();
+        updates[H.OBS]   = $("d_obs").value.trim();
+      }
+
+      return updates;
+    }
+
+    async function saveDetail(){
+      if (!CURRENT_ITEM_ID) return;
+      if (!ME) return;
+
+      if (ME.role === "viewer") {
+        $("detailStatus").textContent = "Sem permissão para editar.";
+        return;
+      }
+
+      $("btnDetailSave").disabled = true;
+      $("detailStatus").textContent = "Salvando…";
+
+      try {
+        const updates = collectDetailUpdates_();
+        const res = await api("item_update", { payload: { id: CURRENT_ITEM_ID, updates } });
+
+        if (!res || !res.ok) {
+          $("detailStatus").textContent = res?.message || "Falhou ao salvar.";
+          return;
+        }
+
+        $("detailStatus").textContent = `✅ Salvo (${res.changed || 0} campo(s)).`;
+
+        // Recarrega item do servidor para refletir "Atualizado_em"
+        const re = await api("item_get", { id: CURRENT_ITEM_ID });
+        if (re && re.ok) {
+          CURRENT_ITEM = re.item;
+          fillDetailForm_(CURRENT_ITEM);
+          const updated = CURRENT_ITEM[H.ATUAL] ? `Atualizado: ${CURRENT_ITEM[H.ATUAL]}` : "";
+          const created = CURRENT_ITEM[H.CADASTRADO] ? `Cadastrado: ${CURRENT_ITEM[H.CADASTRADO]}` : "";
+          $("detailStatus").textContent = [created, updated, "✅ Salvo"].filter(Boolean).join(" · ");
+        }
+
+        // Atualiza listas
+        await carregarRecentes();
+        await carregarPagina();
+
+      } catch(e) {
+        $("detailStatus").textContent = "Erro: " + (e?.message || e);
+      } finally {
+        setDetailEditable_(ME.role);
+      }
+    }
+
+    /************** USERS **************/
     async function loadUsers() {
       if (!ME || ME.role !== "admin") {
         $("usersStatus").textContent = "Sem permissão.";
@@ -678,7 +976,7 @@
       const list = $("usersList");
       list.innerHTML = "";
 
-      // ✅ Safari-safe: botões via DOM + addEventListener
+      // Safari-safe: botões via DOM + addEventListener
       (res.users || []).forEach(u => {
         const item = document.createElement("div");
         item.className = "item";
