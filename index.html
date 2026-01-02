@@ -1,14 +1,21 @@
 <!doctype html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
- <script>
-  window.__gsiLoaded = false;
-  function __onGsiLoad(){ window.__gsiLoaded = true; }
-</script>
-<script src="https://accounts.google.com/gsi/client" onload="__onGsiLoad()"></script>
+
+  <!-- Google Identity Services (login) -->
+  <script>
+    window.__gsiLoaded = false;
+    window.__gsiFailed = false;
+    function __onGsiLoad(){ window.__gsiLoaded = true; }
+    function __onGsiError(){ window.__gsiFailed = true; }
+  </script>
+  <script src="https://accounts.google.com/gsi/client"
+          onload="__onGsiLoad()"
+          onerror="__onGsiError()"></script>
+
   <style>
-    body { font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin: 18px; }
+    body { font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin:18px; }
     .card { border:1px solid #ddd; border-radius:14px; padding:14px; margin-bottom:14px; }
     input, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:16px; }
     button { padding:10px 14px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-size:16px; }
@@ -19,141 +26,124 @@
     .item { padding:10px 0; border-top:1px solid #eee; }
   </style>
 </head>
-<body>
-  <div class="card">
-    <b>Acesso</b>
-    <div class="small" id="authStatus">Faça login para usar.</div>
-    <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
 
-    <button id="fallbackLogin" class="alt" style="display:none; margin-top:8px;" onclick="loginFallback()">
-      Entrar com Google
-    </button>
+<body>
+
+<!-- =================== ACESSO =================== -->
+<div class="card">
+  <b>Acesso</b>
+  <div class="small" id="authStatus">Faça login para usar.</div>
+
+  <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
+
+  <button id="fallbackLogin"
+          class="alt"
+          style="display:none; margin-top:8px;"
+          onclick="loginFallback()">
+    Entrar com Google
+  </button>
 
   <div id="diag" class="small" style="margin-top:8px;"></div>
+</div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px 0;">📚 Biblioteca - Família Batista</h2>
-    <div class="small">Cadastre por ISBN (digitando, leitor ou câmera).</div>
+<!-- =================== TÍTULO =================== -->
+<div class="card">
+  <h2 style="margin:0 0 8px 0;">📚 Biblioteca - Família Batista</h2>
+  <div class="small">Cadastre por ISBN (digitando, leitor ou câmera).</div>
+</div>
+
+<!-- =================== CADASTRO =================== -->
+<div class="card">
+  <label><b>ISBN</b></label>
+  <input id="isbn" inputmode="numeric" placeholder="Ex.: 9788576082675" autocomplete="off">
+
+  <div style="height:10px"></div>
+
+  <label><b>Localização</b> <span class="small">(opcional)</span></label>
+  <input id="location" placeholder="Ex.: Estante sala, prateleira 2">
+
+  <div style="height:10px"></div>
+
+  <label><b>Observações</b> <span class="small">(opcional)</span></label>
+  <textarea id="notes" rows="2"></textarea>
+
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px;">
+    <button id="btn" onclick="cadastrar()">Cadastrar</button>
+    <button class="alt" onclick="abrirScanner()">📷 Escanear ISBN</button>
+    <span id="status" class="small"></span>
+  </div>
+</div>
+
+<!-- =================== RECENTES =================== -->
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <b>Últimos cadastrados</b>
+    <button class="alt" onclick="carregarRecentes()">Atualizar</button>
+  </div>
+  <div id="recentes" class="list"></div>
+</div>
+
+<!-- =================== ACERVO =================== -->
+<div class="card">
+  <b>Acervo</b>
+  <div class="small">Busque por título, autor, editora, ISBN, ano, localização...</div>
+
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <input id="q" placeholder="Buscar...">
+    <button class="alt" onclick="buscar()">Buscar</button>
   </div>
 
-  <div class="card">
-    <label><b>ISBN</b></label>
-    <input id="isbn" inputmode="numeric" placeholder="Ex.: 9788576082675" autocomplete="off">
-    <div style="height:10px"></div>
+  <div class="small" id="resumo" style="margin-top:8px;"></div>
+  <div id="acervo" class="list"></div>
 
-    <label><b>Localização</b> <span class="small">(opcional)</span></label>
-    <input id="location" placeholder="Ex.: Estante sala, prateleira 2">
-    <div style="height:10px"></div>
-
-    <label><b>Observações</b> <span class="small">(opcional)</span></label>
-    <textarea id="notes" rows="2"></textarea>
-
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px;">
-      <button id="btn" onclick="cadastrar()">Cadastrar</button>
-      <button class="alt" onclick="abrirScanner()">📷 Escanear ISBN</button>
-      <span id="status" class="small"></span>
-    </div>
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <button class="alt" onclick="prev()">◀</button>
+    <button class="alt" onclick="next()">▶</button>
   </div>
+</div>
 
-  <div class="card">
+<!-- =================== SCANNER =================== -->
+<div id="scannerModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); padding:18px;">
+  <div style="background:#fff; border-radius:14px; padding:14px; max-width:680px; margin:0 auto;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <b>Últimos cadastrados</b>
-      <button class="alt" onclick="carregarRecentes()">Atualizar</button>
+      <b>Escanear ISBN</b>
+      <button class="alt" onclick="fecharScanner()">Fechar</button>
     </div>
-    <div id="recentes" class="list"></div>
+    <div class="small" style="margin:8px 0;">Aponte para o código de barras (EAN-13).</div>
+    <video id="video"
+           style="width:100%; border-radius:12px; border:1px solid #ddd;"
+           autoplay muted playsinline></video>
+    <div class="small" id="scanStatus" style="margin-top:8px;"></div>
   </div>
+</div>
 
-  <div class="card">
-    <b>Acervo</b>
-    <div class="small">Busque por título, autor, editora, ISBN, ano, localização...</div>
-    <div style="display:flex; gap:10px; margin-top:10px;">
-      <input id="q" placeholder="Buscar...">
-      <button class="alt" onclick="buscar()">Buscar</button>
-    </div>
-    <div class="small" id="resumo" style="margin-top:8px;"></div>
-    <div id="acervo" class="list"></div>
-    <div style="display:flex; gap:10px; margin-top:10px;">
-      <button class="alt" onclick="prev()">◀</button>
-      <button class="alt" onclick="next()">▶</button>
-    </div>
-  </div>
-
-  <div id="scannerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); padding:18px;">
-    <div style="background:#fff; border-radius:14px; padding:14px; max-width:680px; margin:0 auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <b>Escanear ISBN</b>
-        <button class="alt" onclick="fecharScanner()">Fechar</button>
-      </div>
-      <div class="small" style="margin:8px 0 10px 0;">Aponte para o código de barras (EAN-13).</div>
-      <video id="video" style="width:100%; border-radius:12px; border:1px solid #ddd;" autoplay muted playsinline></video>
-      <div class="small" id="scanStatus" style="margin-top:8px;"></div>
-    </div>
-  </div>
-
+<!-- ZXing -->
 <script type="module">
   import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
-  window.ZXing = ZXing; // deixa disponível para seu código atual
-</script>  
+  window.ZXing = ZXing;
+</script>
+
 <script>
-  const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
+/* ================= CONFIG ================= */
+const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
+const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
 
-  // Sua URL do Apps Script (API)
-  const API_URL = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
+let ID_TOKEN = "";
+let OFFSET = 0;
+const LIMIT = 50;
+let codeReader = null;
 
-  let ID_TOKEN = "";
-  let OFFSET = 0;
-  const LIMIT = 50;
-  let codeReader = null;
+const $ = id => document.getElementById(id);
 
-  const $ = id => document.getElementById(id);
-
-  $("isbn").addEventListener("keydown", e => { if (e.key === "Enter") cadastrar(); });
-
-  function setLoading(on, msg="") {
-    $("btn").disabled = on;
-    $("status").textContent = msg;
-  }
-
-  function api(action, payload = {}) {
-  return new Promise((resolve, reject) => {
-    const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
-
-    window[cb] = (data) => {
-      try { delete window[cb]; } catch(e) {}
-      script.remove();
-      resolve(data);
-    };
-
-    const params = new URLSearchParams();
-    params.set("callback", cb);
-    params.set("action", action);
-    params.set("idToken", ID_TOKEN);
-
-    // payload básico
-    if (payload.limit != null) params.set("limit", String(payload.limit));
-    if (payload.query != null) params.set("query", String(payload.query));
-    if (payload.offset != null) params.set("offset", String(payload.offset));
-    if (payload.isbn != null) params.set("isbn", String(payload.isbn));
-
-    // extras (JSON)
-    if (payload.extras != null) {
-      params.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
-    }
-
-    const script = document.createElement("script");
-    script.src = API_URL + "?" + params.toString();
-    script.onerror = () => {
-      try { delete window[cb]; } catch(e) {}
-      script.remove();
-      reject(new Error("Falha ao chamar API (JSONP)."));
-    };
-
-    document.body.appendChild(script);
-  });
-}
-
+/* ================= LOGIN ================= */
 function initLogin() {
-  const diag = (msg) => { $("diag").textContent = msg; };
+  const diag = msg => $("diag").textContent = msg;
+
+  const showFallback = msg => {
+    $("fallbackLogin").style.display = "inline-block";
+    diag(msg);
+  };
 
   const start = () => {
     try {
@@ -161,177 +151,144 @@ function initLogin() {
 
       google.accounts.id.initialize({
         client_id: CLIENT_ID,
-        callback: (resp) => {
+        callback: resp => {
           ID_TOKEN = resp.credential || "";
           $("authStatus").textContent = "✅ Logado.";
           $("fallbackLogin").style.display = "none";
           diag("Token OK.");
-
           carregarRecentes();
           buscar();
           $("isbn").focus();
         }
       });
 
-      // Render do botão padrão
       google.accounts.id.renderButton($("gsiBtn"), {
-        theme: "outline",
-        size: "large",
-        text: "signin_with"
+        theme:"outline",
+        size:"large",
+        text:"signin_with"
       });
 
-      // Se não renderizar (iOS às vezes), libera fallback
       setTimeout(() => {
-        const empty = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
-        if (empty) {
-          $("fallbackLogin").style.display = "inline-block";
-          diag("Botão padrão não renderizou. Use o botão alternativo.");
+        if (!$("gsiBtn").innerHTML.trim()) {
+          showFallback("Botão padrão não renderizou. Use o alternativo.");
         } else {
           diag("Botão de login pronto.");
         }
       }, 900);
 
     } catch (e) {
-      $("fallbackLogin").style.display = "inline-block";
-      diag("Erro ao iniciar: " + (e?.message || e));
+      showFallback("Erro ao iniciar login.");
     }
   };
 
-  const wait = () => {
-    // Espera o script carregar e a lib ficar disponível
-    if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) start();
-    else setTimeout(wait, 150);
-  };
-
-  wait();
-}
-
-  function loginFallback() {
-  try {
-    // Mostra o “one tap / prompt” do Google
-    google.accounts.id.prompt((notification) => {
-      // Se o prompt não puder ser exibido, dá uma dica
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        $("authStatus").textContent = "Login não exibido. Tente abrir no Safari (não no modo embutido) e permita cookies.";
-      }
-    });
-  } catch (e) {
-    $("authStatus").textContent = "Falha ao iniciar login. Recarregue a página.";
-  }
-}
-
-  async function cadastrar() {
-  if (!ID_TOKEN) { setLoading(false, "Faça login antes."); return; }
-
-  const isbn = $("isbn").value.trim();
-  if (!isbn) return;
-
-  // regra simples: exigir 13 dígitos (ISBN/EAN-13)
-  if (!/^\d{13}$/.test(isbn)) {
-    setLoading(false, "O código lido não é ISBN-13 (precisa ter 13 dígitos). Tente novamente.");
-    return;
-  }
-
-  setLoading(true, "Buscando...");
-  const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
-
-  try {
-    const res = await api("cadastrar", { isbn, extras });
-    if (!res || !res.ok) {
-      setLoading(false, (res && res.message) ? res.message : "Falhou.");
+  const t0 = Date.now();
+  (function wait(){
+    if (window.__gsiFailed) {
+      showFallback("Falha ao carregar login do Google.");
       return;
     }
+    if (window.__gsiLoaded && window.google && google.accounts) {
+      start();
+      return;
+    }
+    if (Date.now() - t0 > 4000) {
+      showFallback("Login do Google não carregou a tempo.");
+      return;
+    }
+    setTimeout(wait, 150);
+  })();
+}
 
-    setLoading(false, `✅ ${res.action === "updated" ? "Atualizado" : "Cadastrado"}: ${(res.meta && res.meta.title) || ""}`);
+function loginFallback() {
+  try {
+    google.accounts.id.prompt();
+  } catch {
+    $("diag").textContent = "Falha ao abrir login.";
+  }
+}
+
+/* ================= API (JSONP) ================= */
+function api(action, payload = {}) {
+  return new Promise((resolve, reject) => {
+    const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    window[cb] = data => { delete window[cb]; s.remove(); resolve(data); };
+
+    const p = new URLSearchParams({ callback:cb, action, idToken:ID_TOKEN });
+    if (payload.limit) p.set("limit", payload.limit);
+    if (payload.offset) p.set("offset", payload.offset);
+    if (payload.query) p.set("query", payload.query);
+    if (payload.isbn) p.set("isbn", payload.isbn);
+    if (payload.extras) p.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
+
+    const s = document.createElement("script");
+    s.src = API_URL + "?" + p.toString();
+    s.onerror = () => reject("API error");
+    document.body.appendChild(s);
+  });
+}
+
+/* ================= FUNÇÕES ================= */
+async function cadastrar() {
+  if (!ID_TOKEN) return setStatus("Faça login antes.");
+  const isbn = $("isbn").value.trim();
+  if (!/^\d{13}$/.test(isbn)) return setStatus("ISBN inválido.");
+
+  setStatus("Buscando...", true);
+  try {
+    const r = await api("cadastrar", { isbn, extras:{ location:$("location").value, notes:$("notes").value } });
+    setStatus(r.ok ? "✅ Cadastrado" : r.message);
     $("isbn").value = "";
-    $("isbn").focus();
     carregarRecentes();
     buscar();
-  } catch (e) {
-    setLoading(false, "Erro: " + (e?.message || e));
-  }
+  } catch { setStatus("Erro na API."); }
 }
 
-  async function carregarRecentes() {
-    if (!ID_TOKEN) return;
-    const res = await api("recentes", { limit: 20 });
-    const el = $("recentes");
-    el.innerHTML = "";
-    (res.items || []).forEach(it => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML =
-        `<b>${esc(it.title||"(sem título)")}</b>
-         <div class="small">${esc(it.authors||"")}</div>
-         <div class="small">ISBN: ${esc(it.isbn||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.source||"")}</div>`;
-      el.appendChild(div);
-    });
-  }
+async function carregarRecentes() {
+  if (!ID_TOKEN) return;
+  const r = await api("recentes",{limit:20});
+  $("recentes").innerHTML = (r.items||[]).map(i=>`
+    <div class="item">
+      <b>${esc(i.title)}</b>
+      <div class="small">${esc(i.authors||"")}</div>
+    </div>`).join("");
+}
 
-  function buscar() { OFFSET = 0; carregarPagina(); }
-  async function carregarPagina() {
-    const q = $("q").value.trim();
-    const res = await api("buscar", { query: q, offset: OFFSET, limit: LIMIT });
-    $("resumo").textContent = `Total: ${res.total} | Página: ${Math.floor(OFFSET/LIMIT)+1}`;
-    const el = $("acervo"); el.innerHTML = "";
-    (res.items||[]).forEach(it => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML =
-        `<b>${esc(it.title||"(sem título)")}</b>
-         <div class="small">${esc(it.authors||"")}</div>
-         <div class="small">ISBN: ${esc(it.isbn||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.location||"")}</div>`;
-      el.appendChild(div);
-    });
-  }
-  function next(){ OFFSET += LIMIT; carregarPagina(); }
-  function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
+function buscar(){ OFFSET=0; carregarPagina(); }
+async function carregarPagina(){
+  const r = await api("buscar",{query:$("q").value, offset:OFFSET, limit:LIMIT});
+  $("resumo").textContent = `Total: ${r.total}`;
+  $("acervo").innerHTML = (r.items||[]).map(i=>`
+    <div class="item">
+      <b>${esc(i.title)}</b>
+      <div class="small">${esc(i.authors||"")}</div>
+    </div>`).join("");
+}
+function next(){ OFFSET+=LIMIT; carregarPagina(); }
+function prev(){ OFFSET=Math.max(0,OFFSET-LIMIT); carregarPagina(); }
 
-  async function abrirScanner() {
-  if (!ID_TOKEN) { $("status").textContent = "Faça login antes de escanear."; return; }
-
-  $("scannerModal").style.display = "block";
-  $("scanStatus").textContent = "Abrindo câmera...";
-
-  if (!window.ZXing) {
-    $("scanStatus").textContent = "Carregando scanner...";
-    await new Promise(r => setTimeout(r, 300));
-    if (!window.ZXing) { $("scanStatus").textContent = "Scanner não carregou. Recarregue a página."; return; }
-  }
-
-  try {
-    codeReader = new window.ZXing.BrowserMultiFormatReader();
-    const video = $("video");
-
-    const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
-    const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
-
-    await codeReader.decodeFromVideoDevice(backCam?.deviceId, video, (result) => {
-      if (result) {
-        const raw = result.getText().replace(/\D/g, "");
-      if (raw.length !== 13) return; // ignora EAN-8, etc.
-        $("isbn").value = raw;
-        $("scanStatus").textContent = "✅ Detectado";
+async function abrirScanner(){
+  $("scannerModal").style.display="block";
+  if (!window.ZXing) return $("scanStatus").textContent="Scanner indisponível.";
+  codeReader = new ZXing.BrowserMultiFormatReader();
+  const devs = await ZXing.BrowserCodeReader.listVideoInputDevices();
+  const cam = devs.find(d=>/back|rear/i.test(d.label))||devs[0];
+  codeReader.decodeFromVideoDevice(cam.deviceId,$("video"),res=>{
+    if(res){
+      const v=res.getText().replace(/\D/g,"");
+      if(v.length===13){
+        $("isbn").value=v;
         fecharScanner();
-        $("isbn").focus();
       }
-    });
-
-    $("scanStatus").textContent = "Aponte para o código...";
-  } catch(e) {
-    $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
-  }
+    }
+  });
 }
+function fecharScanner(){ $("scannerModal").style.display="none"; try{codeReader.reset();}catch{} }
 
-  function fecharScanner() {
-    $("scannerModal").style.display = "none";
-    try { codeReader && codeReader.reset(); } catch(e){}
-    codeReader = null;
-  }
+function setStatus(m,load=false){ $("status").textContent=m; $("btn").disabled=!!load; }
+function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
 
-  function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
-
-  initLogin();
+initLogin();
 </script>
+
 </body>
 </html>
