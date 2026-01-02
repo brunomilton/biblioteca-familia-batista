@@ -155,11 +155,19 @@ function initLogin() {
           ID_TOKEN = resp.credential || "";
           $("authStatus").textContent = "✅ Logado.";
           $("fallbackLogin").style.display = "none";
-          carregarRecentes();
-          buscar();
-          $("isbn").focus();
-        }
-      });
+          api("me").then(me => {
+  if (me && me.ok) {
+    $("authStatus").textContent = `✅ Logado: ${me.email} (${me.role})`;
+    const canEdit = (me.role === "admin" || me.role === "editor");
+    $("btn").disabled = !canEdit;
+    if (!canEdit) $("status").textContent = "Você tem acesso somente para consulta.";
+  } else {
+    $("authStatus").textContent = "Sem permissão (não está em USERS).";
+  }
+  carregarRecentes();
+  buscar();
+  $("isbn").focus();
+});
 
       // Tenta renderizar o botão oficial
       google.accounts.id.renderButton($("gsiBtn"), {
