@@ -3,7 +3,6 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Google Identity Services (login) -->
   <script>
     window.__gsiLoaded = false;
     window.__gsiFailed = false;
@@ -15,110 +14,207 @@
           onerror="__onGsiError()"></script>
 
   <style>
-    body { font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin:18px; }
-    .card { border:1px solid #ddd; border-radius:14px; padding:14px; margin-bottom:14px; }
-    input, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:16px; }
+    body { font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin:14px; }
+    .card { border:1px solid #ddd; border-radius:14px; padding:14px; margin-bottom:12px; }
+    input, textarea, select { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:16px; box-sizing:border-box; }
     button { padding:10px 14px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-size:16px; }
     button.alt { background:#fff; color:#111; }
     button:disabled { opacity:.6; }
     .small { color:#666; font-size:13px; }
-    .list { margin-top:10px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .list { margin-top:8px; }
     .item { padding:10px 0; border-top:1px solid #eee; }
+    .tabs { display:flex; gap:8px; margin-bottom:10px; }
+    .tab { flex:1; }
+    .hidden { display:none; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size:12px; color:#333; background:#fafafa; }
   </style>
 </head>
-
 <body>
 
-<!-- =================== ACESSO =================== -->
 <div class="card">
   <b>Acesso</b>
   <div class="small" id="authStatus">Faça login para usar.</div>
-
   <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
 
-  <button id="fallbackLogin"
-          class="alt"
-          style="display:none; margin-top:8px;"
-          onclick="loginFallback()">
+  <button id="fallbackLogin" class="alt" style="display:none; margin-top:8px;" onclick="loginFallback()">
     Entrar com Google
   </button>
 
   <div id="diag" class="small" style="margin-top:8px;"></div>
 </div>
 
-<!-- =================== TÍTULO =================== -->
 <div class="card">
-  <h2 style="margin:0 0 8px 0;">📚 Biblioteca - Família Batista</h2>
-  <div class="small">Cadastre por ISBN (digitando, leitor ou câmera).</div>
+  <h2 style="margin:0 0 6px 0;">📚 Biblioteca - Família Batista</h2>
+  <div class="small">Cadastre por ISBN (digitando, leitor ou câmera) ou manualmente.</div>
+  <div style="margin-top:10px" class="tabs">
+    <button class="alt tab" id="tabCad" onclick="showTab('cad')">Cadastrar</button>
+    <button class="alt tab" id="tabAce" onclick="showTab('acervo')">Acervo</button>
+    <button class="alt tab" id="tabUsr" onclick="showTab('users')">Usuários</button>
+  </div>
+  <div class="small">Logado como: <span class="pill" id="rolePill">—</span></div>
 </div>
 
-<!-- =================== CADASTRO =================== -->
-<div class="card">
+<!-- ===== TAB: CADASTRO ===== -->
+<section id="cad" class="card">
+  <b>Cadastro por ISBN</b>
+  <div style="height:8px"></div>
+
   <label><b>ISBN</b></label>
   <input id="isbn" inputmode="numeric" placeholder="Ex.: 9788576082675" autocomplete="off">
 
   <div style="height:10px"></div>
-
   <label><b>Localização</b> <span class="small">(opcional)</span></label>
   <input id="location" placeholder="Ex.: Estante sala, prateleira 2">
 
   <div style="height:10px"></div>
-
   <label><b>Observações</b> <span class="small">(opcional)</span></label>
   <textarea id="notes" rows="2"></textarea>
 
-  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px;">
-    <button id="btn" onclick="cadastrar()">Cadastrar</button>
+  <div class="row" style="margin-top:10px;">
+    <button id="btnCadastrar" onclick="cadastrar()">Cadastrar</button>
     <button class="alt" onclick="abrirScanner()">📷 Escanear ISBN</button>
+    <button class="alt" onclick="openManual()">✍️ Cadastro manual</button>
     <span id="status" class="small"></span>
   </div>
-</div>
 
-<!-- =================== RECENTES =================== -->
-<div class="card">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <b>Últimos cadastrados</b>
+  <div style="height:14px"></div>
+  <b>Últimos cadastrados</b>
+  <div class="row" style="margin-top:8px;">
     <button class="alt" onclick="carregarRecentes()">Atualizar</button>
   </div>
   <div id="recentes" class="list"></div>
-</div>
+</section>
 
-<!-- =================== ACERVO =================== -->
-<div class="card">
+<!-- ===== TAB: ACERVO ===== -->
+<section id="acervo" class="card hidden">
   <b>Acervo</b>
-  <div class="small">Busque por título, autor, editora, ISBN, ano, localização...</div>
-
-  <div style="display:flex; gap:10px; margin-top:10px;">
+  <div class="small">Busque por título, autor, editora, ID/ISBN, ano, localização...</div>
+  <div class="row" style="margin-top:10px;">
     <input id="q" placeholder="Buscar...">
     <button class="alt" onclick="buscar()">Buscar</button>
   </div>
-
   <div class="small" id="resumo" style="margin-top:8px;"></div>
-  <div id="acervo" class="list"></div>
-
-  <div style="display:flex; gap:10px; margin-top:10px;">
+  <div id="acervoList" class="list"></div>
+  <div class="row" style="margin-top:10px;">
     <button class="alt" onclick="prev()">◀</button>
     <button class="alt" onclick="next()">▶</button>
   </div>
+</section>
+
+<!-- ===== TAB: USERS ===== -->
+<section id="users" class="card hidden">
+  <b>Usuários</b>
+  <div class="small">Somente admin pode gerenciar permissões.</div>
+
+  <div id="usersGate" class="small" style="margin-top:10px;"></div>
+
+  <div id="usersAdmin" class="hidden" style="margin-top:10px;">
+    <div class="row">
+      <button class="alt" onclick="loadUsers()">Atualizar lista</button>
+    </div>
+
+    <div style="height:10px"></div>
+    <b>Adicionar / Atualizar</b>
+    <div style="height:8px"></div>
+
+    <label>Email</label>
+    <input id="u_email" placeholder="ex.: pessoa@gmail.com">
+
+    <div style="height:8px"></div>
+    <label>Nome</label>
+    <input id="u_name" placeholder="opcional">
+
+    <div style="height:8px"></div>
+    <label>Role</label>
+    <select id="u_role">
+      <option value="viewer">viewer</option>
+      <option value="editor">editor</option>
+      <option value="admin">admin</option>
+    </select>
+
+    <div style="height:8px"></div>
+    <label><input type="checkbox" id="u_active" checked> Ativo</label>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="btnUpsert" onclick="upsertUser()">Salvar</button>
+      <span id="u_status" class="small"></span>
+    </div>
+
+    <div style="height:14px"></div>
+    <b>Lista</b>
+    <div id="usersList" class="list"></div>
+  </div>
+</section>
+
+<!-- ===== MODAL: MANUAL ===== -->
+<div id="manualModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); padding:14px;">
+  <div style="background:#fff; border-radius:14px; padding:14px; max-width:720px; margin:0 auto;">
+    <div class="row" style="justify-content:space-between;">
+      <b>Cadastro manual</b>
+      <button class="alt" onclick="closeManual()">Fechar</button>
+    </div>
+
+    <div style="height:10px"></div>
+    <label><b>Título</b></label>
+    <input id="m_title" placeholder="Obrigatório">
+
+    <div style="height:8px"></div>
+    <label>Autores</label>
+    <input id="m_authors" placeholder="Ex.: Autor 1, Autor 2">
+
+    <div style="height:8px"></div>
+    <label>Editora</label>
+    <input id="m_publisher">
+
+    <div style="height:8px"></div>
+    <label>Edição</label>
+    <input id="m_edition">
+
+    <div style="height:8px"></div>
+    <label>Ano</label>
+    <input id="m_year" inputmode="numeric">
+
+    <div style="height:8px"></div>
+    <label>Idioma</label>
+    <input id="m_language" placeholder="pt-BR">
+
+    <div style="height:8px"></div>
+    <label>Páginas</label>
+    <input id="m_pages" inputmode="numeric">
+
+    <div style="height:8px"></div>
+    <label>Link</label>
+    <input id="m_link">
+
+    <div style="height:8px"></div>
+    <label>Localização</label>
+    <input id="m_location">
+
+    <div style="height:8px"></div>
+    <label>Observações</label>
+    <textarea id="m_notes" rows="2"></textarea>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="btnManual" onclick="cadastrarManual()">Salvar manual</button>
+      <span id="m_status" class="small"></span>
+    </div>
+  </div>
 </div>
 
-<!-- =================== SCANNER =================== -->
-<div id="scannerModal"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); padding:18px;">
+<!-- ===== SCANNER ===== -->
+<div id="scannerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); padding:14px;">
   <div style="background:#fff; border-radius:14px; padding:14px; max-width:680px; margin:0 auto;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="row" style="justify-content:space-between;">
       <b>Escanear ISBN</b>
       <button class="alt" onclick="fecharScanner()">Fechar</button>
     </div>
     <div class="small" style="margin:8px 0;">Aponte para o código de barras (EAN-13).</div>
-    <video id="video"
-           style="width:100%; border-radius:12px; border:1px solid #ddd;"
-           autoplay muted playsinline></video>
+    <video id="video" style="width:100%; border-radius:12px; border:1px solid #ddd;" autoplay muted playsinline></video>
     <div class="small" id="scanStatus" style="margin-top:8px;"></div>
   </div>
 </div>
 
-<!-- ZXing -->
 <script type="module">
   import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
   window.ZXing = ZXing;
@@ -130,11 +226,20 @@ const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleuser
 const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
 
 let ID_TOKEN = "";
+let ME = { email:"", role:"" };
+
 let OFFSET = 0;
 const LIMIT = 50;
 let codeReader = null;
 
 const $ = id => document.getElementById(id);
+
+/* ================= TABS ================= */
+function showTab(name){
+  ["cad","acervo","users"].forEach(x => $(x).classList.add("hidden"));
+  $(name).classList.remove("hidden");
+}
+showTab("cad");
 
 /* ================= LOGIN ================= */
 function initLogin() {
@@ -151,12 +256,14 @@ function initLogin() {
 
       google.accounts.id.initialize({
         client_id: CLIENT_ID,
-        callback: resp => {
+        callback: async (resp) => {
           ID_TOKEN = resp.credential || "";
           $("authStatus").textContent = "✅ Logado.";
           $("fallbackLogin").style.display = "none";
           diag("Token OK.");
-          carregarRecentes();
+
+          await loadMe();
+          await carregarRecentes();
           buscar();
           $("isbn").focus();
         }
@@ -183,110 +290,267 @@ function initLogin() {
 
   const t0 = Date.now();
   (function wait(){
-    if (window.__gsiFailed) {
-      showFallback("Falha ao carregar login do Google.");
-      return;
-    }
-    if (window.__gsiLoaded && window.google && google.accounts) {
-      start();
-      return;
-    }
-    if (Date.now() - t0 > 4000) {
-      showFallback("Login do Google não carregou a tempo.");
-      return;
-    }
+    if (window.__gsiFailed) return showFallback("Falha ao carregar login do Google.");
+    if (window.__gsiLoaded && window.google && google.accounts) return start();
+    if (Date.now() - t0 > 4000) return showFallback("Login do Google não carregou a tempo.");
     setTimeout(wait, 150);
   })();
 }
 
 function loginFallback() {
-  try {
-    google.accounts.id.prompt();
-  } catch {
-    $("diag").textContent = "Falha ao abrir login.";
-  }
+  try { google.accounts.id.prompt(); }
+  catch { $("diag").textContent = "Falha ao abrir login."; }
 }
 
-/* ================= API (JSONP) ================= */
+/* ================= API JSONP ================= */
 function api(action, payload = {}) {
   return new Promise((resolve, reject) => {
     const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
     window[cb] = data => { delete window[cb]; s.remove(); resolve(data); };
 
     const p = new URLSearchParams({ callback:cb, action, idToken:ID_TOKEN });
-    if (payload.limit) p.set("limit", payload.limit);
-    if (payload.offset) p.set("offset", payload.offset);
-    if (payload.query) p.set("query", payload.query);
-    if (payload.isbn) p.set("isbn", payload.isbn);
-    if (payload.extras) p.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
+
+    if (payload.limit != null) p.set("limit", String(payload.limit));
+    if (payload.offset != null) p.set("offset", String(payload.offset));
+    if (payload.query != null) p.set("query", String(payload.query));
+    if (payload.isbn != null) p.set("isbn", String(payload.isbn));
+
+    if (payload.extras != null) p.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
+    if (payload.payload != null) p.set("payload", encodeURIComponent(JSON.stringify(payload.payload)));
+    if (payload.user != null) p.set("user", encodeURIComponent(JSON.stringify(payload.user)));
 
     const s = document.createElement("script");
     s.src = API_URL + "?" + p.toString();
-    s.onerror = () => reject("API error");
+    s.onerror = () => reject(new Error("Falha ao chamar API."));
     document.body.appendChild(s);
   });
 }
 
-/* ================= FUNÇÕES ================= */
+/* ================= ME / ROLE UI ================= */
+async function loadMe(){
+  const r = await api("me");
+  if (!r || !r.ok) {
+    ME = { email:"", role:"" };
+    $("rolePill").textContent = "sem acesso";
+    $("btnCadastrar").disabled = true;
+    $("btnManual").disabled = true;
+    $("usersGate").textContent = "Sem permissão (seu e-mail não está ativo em USERS).";
+    return;
+  }
+  ME = { email:r.email, role:r.role };
+  $("rolePill").textContent = `${ME.role}`;
+  const canEdit = (ME.role === "admin" || ME.role === "editor");
+  $("btnCadastrar").disabled = !canEdit;
+  $("btnManual").disabled = !canEdit;
+
+  if (ME.role === "admin") {
+    $("usersGate").textContent = "Admin: você pode gerenciar usuários aqui.";
+    $("usersAdmin").classList.remove("hidden");
+    await loadUsers();
+  } else {
+    $("usersGate").textContent = "Você não é admin. Apenas consulta.";
+    $("usersAdmin").classList.add("hidden");
+  }
+}
+
+/* ================= CADASTRO ISBN ================= */
+$("isbn").addEventListener("keydown", e => { if (e.key === "Enter") cadastrar(); });
+
+function setStatus(msg, loading=false){
+  $("status").textContent = msg || "";
+  $("btnCadastrar").disabled = loading || !(ME.role==="admin"||ME.role==="editor");
+}
+
 async function cadastrar() {
   if (!ID_TOKEN) return setStatus("Faça login antes.");
+  if (!(ME.role==="admin"||ME.role==="editor")) return setStatus("Sem permissão para cadastrar.");
+
   const isbn = $("isbn").value.trim();
-  if (!/^\d{13}$/.test(isbn)) return setStatus("ISBN inválido.");
+  if (!/^\d{13}$/.test(isbn)) return setStatus("ISBN inválido (13 dígitos).");
 
   setStatus("Buscando...", true);
   try {
-    const r = await api("cadastrar", { isbn, extras:{ location:$("location").value, notes:$("notes").value } });
-    setStatus(r.ok ? "✅ Cadastrado" : r.message);
+    const extras = { location:$("location").value.trim(), notes:$("notes").value.trim() };
+    const r = await api("cadastrar", { isbn, extras });
+    if (!r || !r.ok) return setStatus(r?.message || "Falhou.");
+    setStatus("✅ Cadastrado!");
     $("isbn").value = "";
-    carregarRecentes();
+    await carregarRecentes();
     buscar();
-  } catch { setStatus("Erro na API."); }
+  } catch(e) {
+    setStatus("Erro: " + (e?.message || e));
+  }
 }
 
+/* ================= CADASTRO MANUAL ================= */
+function openManual(){
+  if (!(ME.role==="admin"||ME.role==="editor")) { setStatus("Sem permissão para cadastro manual."); return; }
+  $("manualModal").style.display = "block";
+  $("m_status").textContent = "";
+}
+function closeManual(){ $("manualModal").style.display = "none"; }
+
+async function cadastrarManual(){
+  if (!(ME.role==="admin"||ME.role==="editor")) { $("m_status").textContent="Sem permissão."; return; }
+
+  const payload = {
+    title: $("m_title").value.trim(),
+    authors: $("m_authors").value.trim(),
+    publisher: $("m_publisher").value.trim(),
+    edition: $("m_edition").value.trim(),
+    year: $("m_year").value.trim(),
+    language: $("m_language").value.trim(),
+    pages: $("m_pages").value.trim(),
+    link: $("m_link").value.trim(),
+    location: $("m_location").value.trim(),
+    notes: $("m_notes").value.trim()
+  };
+  if (!payload.title) { $("m_status").textContent="Título é obrigatório."; return; }
+
+  $("m_status").textContent="Salvando...";
+  try {
+    const r = await api("cadastrar_manual", { payload });
+    if (!r || !r.ok) { $("m_status").textContent = r?.message || "Falhou."; return; }
+    $("m_status").textContent = `✅ Salvo (${r.id})`;
+    closeManual();
+    await carregarRecentes();
+    buscar();
+  } catch(e) {
+    $("m_status").textContent="Erro: " + (e?.message || e);
+  }
+}
+
+/* ================= RECENTES ================= */
 async function carregarRecentes() {
   if (!ID_TOKEN) return;
-  const r = await api("recentes",{limit:20});
-  $("recentes").innerHTML = (r.items||[]).map(i=>`
-    <div class="item">
-      <b>${esc(i.title)}</b>
-      <div class="small">${esc(i.authors||"")}</div>
-    </div>`).join("");
-}
-
-function buscar(){ OFFSET=0; carregarPagina(); }
-async function carregarPagina(){
-  const r = await api("buscar",{query:$("q").value, offset:OFFSET, limit:LIMIT});
-  $("resumo").textContent = `Total: ${r.total}`;
-  $("acervo").innerHTML = (r.items||[]).map(i=>`
-    <div class="item">
-      <b>${esc(i.title)}</b>
-      <div class="small">${esc(i.authors||"")}</div>
-    </div>`).join("");
-}
-function next(){ OFFSET+=LIMIT; carregarPagina(); }
-function prev(){ OFFSET=Math.max(0,OFFSET-LIMIT); carregarPagina(); }
-
-async function abrirScanner(){
-  $("scannerModal").style.display="block";
-  if (!window.ZXing) return $("scanStatus").textContent="Scanner indisponível.";
-  codeReader = new ZXing.BrowserMultiFormatReader();
-  const devs = await ZXing.BrowserCodeReader.listVideoInputDevices();
-  const cam = devs.find(d=>/back|rear/i.test(d.label))||devs[0];
-  codeReader.decodeFromVideoDevice(cam.deviceId,$("video"),res=>{
-    if(res){
-      const v=res.getText().replace(/\D/g,"");
-      if(v.length===13){
-        $("isbn").value=v;
-        fecharScanner();
-      }
-    }
+  const r = await api("recentes", { limit: 20 });
+  const el = $("recentes");
+  el.innerHTML = "";
+  (r.items || []).forEach(it => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML =
+      `<b>${esc(it.title||"(sem título)")}</b>
+       <div class="small">${esc(it.authors||"")}</div>
+       <div class="small">ID: ${esc(it.id||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.source||"")}</div>`;
+    el.appendChild(div);
   });
 }
-function fecharScanner(){ $("scannerModal").style.display="none"; try{codeReader.reset();}catch{} }
 
-function setStatus(m,load=false){ $("status").textContent=m; $("btn").disabled=!!load; }
+/* ================= ACERVO ================= */
+function buscar(){ OFFSET = 0; carregarPagina(); }
+
+async function carregarPagina(){
+  const r = await api("buscar", { query: $("q").value.trim(), offset: OFFSET, limit: LIMIT });
+  $("resumo").textContent = `Total: ${r.total || 0} | Página: ${Math.floor(OFFSET/LIMIT)+1}`;
+  const el = $("acervoList"); el.innerHTML = "";
+  (r.items||[]).forEach(it => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML =
+      `<b>${esc(it.title||"(sem título)")}</b>
+       <div class="small">${esc(it.authors||"")}</div>
+       <div class="small">ID: ${esc(it.id||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.location||"")}</div>`;
+    el.appendChild(div);
+  });
+}
+function next(){ OFFSET += LIMIT; carregarPagina(); }
+function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
+
+/* ================= USERS (ADMIN) ================= */
+async function loadUsers(){
+  $("u_status").textContent = "";
+  const list = $("usersList");
+  list.innerHTML = "";
+  try {
+    const r = await api("users_list");
+    if (!r || !r.ok) { list.innerHTML = `<div class="small">Falhou: ${esc(r?.message||"")}</div>`; return; }
+
+    (r.users||[]).forEach(u => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <b>${esc(u.email)}</b> <span class="pill">${esc(u.role)}</span> <span class="pill">${u.active ? "ativo" : "inativo"}</span>
+        <div class="small">${esc(u.name||"")}</div>
+        <div class="row" style="margin-top:8px;">
+          <button class="alt" onclick='fillUser(${JSON.stringify(u).replace(/'/g,"&#39;")})'>Editar</button>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } catch(e) {
+    list.innerHTML = `<div class="small">Erro: ${esc(e?.message||e)}</div>`;
+  }
+}
+
+function fillUser(u){
+  $("u_email").value = u.email || "";
+  $("u_name").value = u.name || "";
+  $("u_role").value = u.role || "viewer";
+  $("u_active").checked = !!u.active;
+  $("u_status").textContent = "Pronto para salvar.";
+}
+
+async function upsertUser(){
+  const email = $("u_email").value.trim().toLowerCase();
+  const name = $("u_name").value.trim();
+  const role = $("u_role").value;
+  const active = $("u_active").checked;
+
+  if (!email.includes("@")) { $("u_status").textContent = "Email inválido."; return; }
+
+  $("u_status").textContent = "Salvando...";
+  try {
+    const r = await api("users_upsert", { user: { email, name, role, active } });
+    if (!r || !r.ok) { $("u_status").textContent = r?.message || "Falhou."; return; }
+    $("u_status").textContent = `✅ ${r.action} (linha ${r.row})`;
+    await loadUsers();
+  } catch(e) {
+    $("u_status").textContent = "Erro: " + (e?.message || e);
+  }
+}
+
+/* ================= SCANNER ================= */
+async function abrirScanner() {
+  if (!(ME.role==="admin"||ME.role==="editor")) return setStatus("Sem permissão para escanear/cadastrar.");
+  $("scannerModal").style.display = "block";
+  $("scanStatus").textContent = "Abrindo câmera...";
+
+  if (!window.ZXing) { $("scanStatus").textContent = "Scanner não carregou. Recarregue."; return; }
+
+  try {
+    codeReader = new window.ZXing.BrowserMultiFormatReader();
+    const video = $("video");
+    const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
+    const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
+
+    await codeReader.decodeFromVideoDevice(backCam?.deviceId, video, (result) => {
+      if (result) {
+        const raw = result.getText().replace(/\D/g, "");
+        if (raw.length !== 13) return;
+        $("isbn").value = raw;
+        $("scanStatus").textContent = "✅ Detectado";
+        fecharScanner();
+        $("isbn").focus();
+      }
+    });
+
+    $("scanStatus").textContent = "Aponte para o código...";
+  } catch(e) {
+    $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
+  }
+}
+
+function fecharScanner() {
+  $("scannerModal").style.display = "none";
+  try { codeReader && codeReader.reset(); } catch(e){}
+  codeReader = null;
+}
+
+/* ================= HELPERS ================= */
 function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
 
+/* ================= START ================= */
 initLogin();
 </script>
 
