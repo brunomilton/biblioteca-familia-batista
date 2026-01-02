@@ -646,6 +646,11 @@
     }
 
     function showScreen(name) {
+      if (name !== "Acervo") {
+  // evita “fantasma” visual de resultados antigos
+      if ($("acervo")) $("acervo").innerHTML = "";
+      if ($("resumo")) $("resumo").textContent = "";
+      }
       $("screenCadastrar").classList.toggle("hidden", name !== "Cadastrar");
       $("screenAcervo").classList.toggle("hidden", name !== "Acervo");
       $("screenUsers").classList.toggle("hidden", name !== "Users");
@@ -654,9 +659,24 @@
       $("navAcervo").classList.toggle("active", name === "Acervo");
       $("navUsers").classList.toggle("active", name === "Users");
 
-      if (name === "Users" && ME && ME.role === "admin") loadUsers();
-    }
+  // ✅ AO ENTRAR EM ACERVO: se a busca estiver vazia, volta para o "início" do acervo
+      if (name === "Acervo") {
+      const q = ($("q")?.value || "").trim();
 
+    // zera paginação sempre que entra no acervo
+      OFFSET = 0;
+
+    // se não há termo de busca, força listagem padrão (primeiros resultados)
+      if (!q) {
+      carregarPagina();     // query vazia
+    } else {
+      // se há termo, mantém o filtro, mas começa da primeira página
+      carregarPagina();
+    }
+  }
+
+      if (name === "Users" && ME && ME.role === "admin") loadUsers();
+}
     async function cadastrar() {
       if (!ID_TOKEN) return setStatusCadastrar_("Faça login antes.");
       if (!ME || (ME.role !== "admin" && ME.role !== "editor")) return setStatusCadastrar_("Sem permissão para cadastrar.");
