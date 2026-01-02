@@ -36,23 +36,9 @@
     .item.clickable { cursor:pointer; }
     .item.clickable:active { opacity:.75; }
 
-    .rememberRow{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      width:100%;
-      flex-wrap:nowrap;
-    }
-    .rememberRow input{
-      width:20px;
-      height:20px;
-      flex:0 0 auto;
-    }
-    .rememberRow span{
-      flex:1 1 auto;
-      white-space:normal;
-      word-break:break-word;
-    }
+    .rememberRow{ display:flex; align-items:center; gap:10px; width:100%; flex-wrap:nowrap; }
+    .rememberRow input{ width:20px; height:20px; flex:0 0 auto; }
+    .rememberRow span{ flex:1 1 auto; white-space:normal; word-break:break-word; }
 
     .nav { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid #e6e6e6; display:flex; }
     .nav button { flex:1; border:none; border-radius:0; background:#fff; color:#111; padding:12px 6px; font-size:13px; }
@@ -107,6 +93,13 @@
               style="display:none; margin-top:8px;"
               onclick="loginFallback()">
         Entrar com Google
+      </button>
+
+      <button id="btnOpenExternal"
+              class="alt"
+              style="display:none; margin-top:8px;"
+              onclick="openExternal()">
+        Abrir no Safari/Chrome
       </button>
 
       <div id="diag" class="small" style="margin-top:8px;"></div>
@@ -406,10 +399,8 @@
     const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
     const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
 
-    // remember me (token no dispositivo)
     const STORAGE_KEY = "bib_id_token_v1";
 
-    // Cabeçalhos do seu CATALOGO (chaves que vêm do item_get)
     const H = {
       ID: "ID",
       ISBN: "ISBN",
@@ -434,7 +425,6 @@
     const LIMIT = 50;
     let codeReader = null;
 
-    // detalhes
     let CURRENT_ITEM_ID = "";
     let CURRENT_ITEM = null;
 
@@ -444,6 +434,17 @@
 
     function diag(msg){ $("diag").textContent = msg; }
     function setTop(msg){ $("topStatus").textContent = msg; }
+
+    function isInAppBrowser_() {
+      const ua = (navigator.userAgent || "").toLowerCase();
+      return ua.includes("whatsapp") || ua.includes("instagram") || ua.includes("fbav") || ua.includes("fban");
+    }
+
+    function openExternal() {
+      // tentativa simples de sair do WebView
+      const url = window.location.href;
+      window.open(url, "_blank");
+    }
 
     function saveToken_(token){
       if (!$("remember").checked) return;
@@ -468,7 +469,6 @@
       $("usersListCard").classList.add("hidden");
       $("btnCadastrar").disabled = true;
       $("btnManual").disabled = true;
-      // fecha modal se estiver aberto
       closeDetail(true);
     }
 
@@ -535,6 +535,12 @@
         diag(msg);
       };
 
+      // Se estiver em navegador embutido, já avisa e mostra botão externo
+      if (isInAppBrowser_()) {
+        $("btnOpenExternal").style.display = "inline-block";
+        diag("Você está no navegador embutido (WhatsApp/Instagram). O login do Google pode não carregar aqui. Toque em “Abrir no Safari/Chrome”.");
+      }
+
       const validateToken = async () => {
         try {
           const me = await api("me");
@@ -556,12 +562,14 @@
           clearToken_();
           setLoggedOutUI_("Sessão expirada. Faça login novamente.");
           showFallback("Sessão expirada. Faça login novamente.");
+          if (isInAppBrowser_()) $("btnOpenExternal").style.display = "inline-block";
         }
       };
 
       const start = () => {
         try {
           diag("Inicializando login…");
+          setTop("Não autenticado.");
 
           google.accounts.id.initialize({
             client_id: CLIENT_ID,
@@ -580,32 +588,47 @@
             text: "signin_with"
           });
 
-          // 1) tenta token salvo
+          // token salvo primeiro
           const saved = loadToken_();
           if (saved) {
             ID_TOKEN = saved;
             diag("Token salvo encontrado. Validando…");
             validateToken();
           } else {
-            // 2) tenta prompt rápido (quando possível)
             setTimeout(() => { try { google.accounts.id.prompt(); } catch(e) {} }, 250);
           }
 
+          // se o botão não renderizar, mostra fallback
           setTimeout(() => {
             const empty = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
-            if (empty) showFallback("Botão padrão não renderizou. Use o alternativo.");
+            if (empty) {
+              showFallback("Botão padrão não renderizou. Use o alternativo.");
+              if (isInAppBrowser_()) $("btnOpenExternal").style.display = "inline-block";
+            }
           }, 900);
 
         } catch (e) {
+          setTop("Não autenticado.");
           showFallback("Erro ao iniciar login.");
+          if (isInAppBrowser_()) $("btnOpenExternal").style.display = "inline-block";
         }
       };
 
       const t0 = Date.now();
       (function wait(){
-        if (window.__gsiFailed) { showFallback("Falha ao carregar login do Google."); return; }
+        if (window.__gsiFailed) {
+          setTop("Não autenticado.");
+          showFallback("Falha ao carregar login do Google.");
+          if (isInAppBrowser_()) $("btnOpenExternal").style.display = "inline-block";
+          return;
+        }
         if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) { start(); return; }
-        if (Date.now() - t0 > 5000) { showFallback("Login do Google não carregou a tempo."); return; }
+        if (Date.now() - t0 > 6000) {
+          setTop("Não autenticado.");
+          showFallback("Login do Google não carregou neste navegador. Se estiver no WhatsApp/Instagram, toque em “Abrir no Safari/Chrome”.");
+          $("btnOpenExternal").style.display = "inline-block";
+          return;
+        }
         setTimeout(wait, 150);
       })();
     }
@@ -747,7 +770,7 @@
         await carregarRecentes();
         await buscar();
       } catch(e) {
-        $("statusManual").textContent = "Erro: " + (e?.message || e));
+        $("statusManual").textContent = "Erro: " + (e?.message || e);
       } finally {
         $("btnManual").disabled = false;
       }
@@ -762,9 +785,6 @@
 
       try {
         codeReader = new window.ZXing.BrowserMultiFormatReader();
-
-        // Nota: em alguns Android o label vem vazio antes da permissão.
-        // Ainda assim, o primeiro device costuma ser o padrão.
         const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
         const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
 
@@ -800,7 +820,6 @@
     }
 
     function setDetailEditable_(role){
-      // Sempre travado:
       $("d_id").disabled = true;
       $("d_isbn").disabled = true;
       $("d_fonte").disabled = true;
@@ -809,12 +828,9 @@
       const isEditor = (role === "editor");
       const isAdmin  = (role === "admin");
 
-      // Campos editáveis por role:
       const adminEditableIds = ["d_titulo","d_autores","d_editora","d_edicao","d_ano","d_idioma","d_paginas","d_link","d_localizacao","d_obs"];
       const editorEditableIds = ["d_localizacao","d_obs"];
-      const viewerEditableIds = [];
 
-      // desabilita tudo primeiro
       adminEditableIds.forEach(id => $(id).disabled = true);
 
       if (isAdmin) {
@@ -826,7 +842,6 @@
         $("btnDetailSave").disabled = false;
         $("detailRoleHint").textContent = "editor: pode editar Localização e Observações.";
       } else {
-        // viewer
         $("btnDetailSave").disabled = true;
         $("detailRoleHint").textContent = "viewer: somente leitura.";
       }
@@ -876,11 +891,8 @@
 
         CURRENT_ITEM = res.item;
         fillDetailForm_(CURRENT_ITEM);
-
-        // aplica permissões
         setDetailEditable_(ME?.role || "viewer");
 
-        // status
         const updated = CURRENT_ITEM[H.ATUAL] ? `Atualizado: ${CURRENT_ITEM[H.ATUAL]}` : "";
         const created = CURRENT_ITEM[H.CADASTRADO] ? `Cadastrado: ${CURRENT_ITEM[H.CADASTRADO]}` : "";
         $("detailStatus").textContent = [created, updated].filter(Boolean).join(" · ");
@@ -891,11 +903,9 @@
     }
 
     function collectDetailUpdates_(){
-      // envia updates usando as CHAVES do CATALOGO (com acento)
-      // Admin NÃO envia ISBN nem Fonte (travados por política)
       const updates = {};
-
       const role = ME?.role || "viewer";
+
       if (role === "admin") {
         updates[H.TITULO]  = $("d_titulo").value.trim();
         updates[H.AUTORES] = $("d_autores").value.trim();
@@ -936,9 +946,6 @@
           return;
         }
 
-        $("detailStatus").textContent = `✅ Salvo (${res.changed || 0} campo(s)).`;
-
-        // Recarrega item do servidor para refletir "Atualizado_em"
         const re = await api("item_get", { id: CURRENT_ITEM_ID });
         if (re && re.ok) {
           CURRENT_ITEM = re.item;
@@ -946,9 +953,10 @@
           const updated = CURRENT_ITEM[H.ATUAL] ? `Atualizado: ${CURRENT_ITEM[H.ATUAL]}` : "";
           const created = CURRENT_ITEM[H.CADASTRADO] ? `Cadastrado: ${CURRENT_ITEM[H.CADASTRADO]}` : "";
           $("detailStatus").textContent = [created, updated, "✅ Salvo"].filter(Boolean).join(" · ");
+        } else {
+          $("detailStatus").textContent = `✅ Salvo (${res.changed || 0} campo(s)).`;
         }
 
-        // Atualiza listas
         await carregarRecentes();
         await carregarPagina();
 
@@ -976,7 +984,6 @@
       const list = $("usersList");
       list.innerHTML = "";
 
-      // Safari-safe: botões via DOM + addEventListener
       (res.users || []).forEach(u => {
         const item = document.createElement("div");
         item.className = "item";
