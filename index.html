@@ -1,333 +1,882 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Biblioteca - Família Batista</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Google Identity -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Google Identity Services -->
+  <script>
+    window.__gsiLoaded = false;
+    window.__gsiFailed = false;
+    function __onGsiLoad(){ window.__gsiLoaded = true; }
+    function __onGsiError(){ window.__gsiFailed = true; }
+  </script>
+  <script src="https://accounts.google.com/gsi/client" onload="__onGsiLoad()" onerror="__onGsiError()"></script>
 
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f5f6f8;
-      margin: 0;
-      padding: 12px;
-    }
+    body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial;margin:0;background:#f5f6f8}
+    .topbar{position:sticky;top:0;background:#fff;padding:14px 16px;border-bottom:1px solid #e6e6e6;z-index:10}
+    .title{font-size:18px;font-weight:700}
+    .sub{font-size:12px;color:#666;margin-top:2px}
+    .wrap{padding:14px 14px 82px}
+    .card{background:#fff;border:1px solid #e6e6e6;border-radius:16px;padding:14px;margin-bottom:12px}
+    input,textarea,select{width:100%;padding:10px;border-radius:12px;border:1px solid #d7d7d7;font-size:16px;box-sizing:border-box}
+    button{padding:10px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-size:16px}
+    button.alt{background:#fff;color:#111;border-color:#bbb}
+    button:disabled{opacity:.6}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .small{color:#666;font-size:13px}
+    .hidden{display:none!important}
 
-    h1 {
-      font-size: 20px;
-      margin: 0 0 10px 0;
-    }
+    .nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e6e6e6;display:flex}
+    .nav button{flex:1;border:none;border-radius:0;background:#fff;color:#111;padding:12px 6px;font-size:13px}
+    .nav button.active{font-weight:700}
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #ddd;font-size:12px;color:#444;background:#fafafa}
 
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    /* Tiles */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:12px}
+    .tile{background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
+    .cover{width:100%;height:190px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666}
+    .cover img{width:100%;height:100%;object-fit:cover;display:block}
+    .tileBody{padding:10px}
+    .tileTitle{font-weight:700;font-size:13px;line-height:1.2}
+    .tileMeta{margin-top:6px;font-size:12px;color:#666;line-height:1.2}
 
-    input, textarea, button, select {
-      font-size: 15px;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-    }
+    /* Modal item (com rolagem interna) */
+    #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);padding:14px;z-index:50}
+    #modalBox{background:#fff;border-radius:16px;max-width:720px;margin:0 auto;max-height:88vh;overflow:auto;padding:14px}
+    #modalHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px;z-index:5}
+    #modalHeader b{font-size:16px}
+    .field{margin-top:10px}
 
-    input, textarea {
-      flex: 1;
-      min-width: 0;
-    }
+    /* scanner modal */
+    #scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);padding:14px;z-index:60}
+    #scannerBox{background:#fff;border-radius:16px;padding:12px;max-width:720px;margin:0 auto}
+    #video{width:100%;border-radius:14px;border:1px solid #ddd}
 
-    textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    button {
-      cursor: pointer;
-      background: #000;
-      color: #fff;
-      border: none;
-    }
-
-    button.secondary {
-      background: #eee;
-      color: #000;
-    }
-
-    .muted {
-      color: #666;
-      font-size: 13px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0;
-    }
-
-    .nav button {
-      background: none;
-      color: #000;
-      font-size: 14px;
-    }
-
-    .tile-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-    }
-
-    .tile {
-      background: #fff;
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.1);
-      cursor: pointer;
-    }
-
-    .tile img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 8px;
-      background: #eee;
-    }
-
-    .tile b {
-      display: block;
-      margin-top: 6px;
-      font-size: 14px;
-    }
-
-    .tile span {
-      font-size: 13px;
-      color: #666;
-    }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .modal {
-      background: #fff;
-      width: 95%;
-      max-width: 520px;
-      max-height: 90vh;
-      overflow-y: auto;
-      border-radius: 14px;
-      padding: 16px;
-    }
+    /* remember row */
+    .rememberRow{display:flex;align-items:center;gap:10px;width:100%}
+    .rememberRow input{width:20px;height:20px;flex:0 0 auto}
+    .rememberRow span{flex:1 1 auto;white-space:normal;word-break:break-word}
   </style>
 </head>
 
 <body>
+  <div class="topbar">
+    <div class="title">📚 Biblioteca - Família Batista</div>
+    <div class="sub" id="topStatus">Carregando…</div>
+  </div>
 
-  <h1>📚 Biblioteca - Família Batista</h1>
-  <div id="status" class="muted">Carregando...</div>
+  <div class="wrap">
 
-  <!-- ACESSO -->
-  <div class="card" id="cardLogin">
-    <b>Acesso</b>
-    <p class="muted">Faça login para usar.</p>
+    <!-- Acesso -->
+    <div class="card">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <b>Acesso</b>
+          <div class="small" id="authStatus">Faça login para usar.</div>
+        </div>
+        <div class="row">
+          <button id="btnLogout" class="alt" style="display:none" onclick="logout()">Sair</button>
+        </div>
+      </div>
 
-    <!-- GOOGLE LOGIN -->
-    <div id="gsiBtn" style="margin:10px 0;min-height:44px;"></div>
+      <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
 
-    <!-- EMAIL + PIN -->
-    <div style="margin-top:10px;">
-      <b>Ou entrar com Email + PIN</b>
-      <div class="row" style="margin-top:6px;">
+      <button id="fallbackLogin"
+              class="alt"
+              style="display:none; margin-top:8px;"
+              onclick="loginFallback()">
+        Entrar com Google
+      </button>
+
+      <div class="small" style="margin-top:10px"><b>Ou entrar com Email + PIN</b></div>
+      <div class="row" style="margin-top:8px">
         <input id="pin_email" placeholder="email@exemplo.com" autocomplete="username email">
-        <input id="pin_code"
-               placeholder="PIN"
-               type="password"
-               inputmode="numeric"
-               autocomplete="current-password">
-        <button onclick="loginPin()">Entrar</button>
+        <input id="pin_code" placeholder="PIN" type="password" inputmode="numeric" autocomplete="current-password">
+        <button class="alt" onclick="loginPin()">Entrar</button>
+      </div>
+
+      <div class="small" style="margin-top:10px;">
+        <label class="rememberRow">
+          <input type="checkbox" id="remember" checked>
+          <span>Permanecer logado neste dispositivo</span>
+        </label>
+      </div>
+
+      <div id="diag" class="small" style="margin-top:8px;"></div>
+    </div>
+
+    <!-- ======= TELA: CADASTRAR ======= -->
+    <section id="screenCadastrar">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <b>Cadastrar</b>
+          <span class="pill" id="rolePill">—</span>
+        </div>
+        <div class="small">Por ISBN (digitando ou scanner) ou manual (sem ISBN).</div>
+      </div>
+
+      <div class="card">
+        <label><b>ISBN</b></label>
+        <input id="isbn" inputmode="numeric" placeholder="Ex.: 9788576082675" autocomplete="off">
+        <div style="height:10px"></div>
+
+        <label><b>Localização</b> <span class="small">(opcional)</span></label>
+        <input id="location" placeholder="Ex.: Estante sala, prateleira 2">
+        <div style="height:10px"></div>
+
+        <label><b>Observações</b> <span class="small">(opcional)</span></label>
+        <textarea id="notes" rows="2"></textarea>
+
+        <div class="row" style="margin-top:10px;">
+          <button id="btnCadastrar" onclick="cadastrar()">Cadastrar</button>
+          <button class="alt" onclick="abrirScanner()">📷 Escanear ISBN</button>
+          <button class="alt" onclick="openManual()">✍️ Cadastro manual</button>
+        </div>
+
+        <div class="small" id="statusCadastrar" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <b>Últimos cadastrados</b>
+          <button class="alt" onclick="carregarRecentes()">Atualizar</button>
+        </div>
+        <div id="recentes" class="small" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <!-- ======= TELA: ACERVO ======= -->
+    <section id="screenAcervo" class="hidden">
+      <div class="card">
+        <b>Acervo</b>
+        <div class="small">Busque por título, autor, editora, ID/ISBN, ano, localização…</div>
+
+        <div class="row" style="margin-top:10px;">
+          <input id="q" placeholder="Buscar...">
+          <button class="alt" onclick="buscar()">Buscar</button>
+        </div>
+
+        <div class="small" id="resumo" style="margin-top:10px;"></div>
+        <div id="grid" class="grid"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="alt" onclick="prev()">◀</button>
+          <button class="alt" onclick="next()">▶</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= TELA: USUÁRIOS (ADMIN) ======= -->
+    <section id="screenUsers" class="hidden">
+      <div class="card">
+        <b>Usuários</b>
+        <div class="small">Somente admin pode ver/editar.</div>
+        <div class="small" id="usersStatus" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="card" id="usersAdminCard">
+        <b>Adicionar/Atualizar</b>
+        <div style="height:10px"></div>
+
+        <label><b>Email</b></label>
+        <input id="u_email" placeholder="email@exemplo.com">
+
+        <div style="height:10px"></div>
+        <label><b>Role</b></label>
+        <select id="u_role">
+          <option value="viewer">viewer</option>
+          <option value="editor">editor</option>
+          <option value="admin">admin</option>
+        </select>
+
+        <div style="height:10px"></div>
+        <label><b>Ativo</b></label>
+        <select id="u_active">
+          <option value="true">TRUE</option>
+          <option value="false">FALSE</option>
+        </select>
+
+        <div style="height:10px"></div>
+        <label><b>Nome</b> <span class="small">(opcional)</span></label>
+        <input id="u_name" placeholder="Opcional">
+
+        <div style="height:10px"></div>
+        <label><b>Definir PIN</b> <span class="small">(opcional)</span></label>
+        <input id="u_pin" type="password" inputmode="numeric" placeholder="PIN (min 4) — deixe em branco para não alterar">
+
+        <div class="row" style="margin-top:10px;">
+          <button id="btnUserSave" onclick="saveUser()">Salvar usuário</button>
+          <button class="alt" onclick="loadUsers()">Recarregar</button>
+        </div>
+      </div>
+
+      <div class="card" id="usersListCard">
+        <b>Lista</b>
+        <div id="usersList" class="small" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <!-- ======= TELA: STATS ======= -->
+    <section id="screenStats" class="hidden">
+      <div class="card">
+        <b>Estatísticas</b>
+        <div class="small" id="statsBox" style="margin-top:10px">—</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="nav">
+    <button id="navCadastrar" class="active" onclick="showScreen('Cadastrar')">Cadastrar</button>
+    <button id="navAcervo" onclick="showScreen('Acervo')">Acervo</button>
+    <button id="navStats" onclick="showScreen('Stats')">Stats</button>
+    <button id="navUsers" onclick="showScreen('Users')">Usuários</button>
+  </div>
+
+  <!-- Scanner modal -->
+  <div id="scannerModal">
+    <div id="scannerBox">
+      <div class="row" style="justify-content:space-between;">
+        <b>Escanear ISBN</b>
+        <button class="alt" onclick="fecharScanner()">Fechar</button>
+      </div>
+      <div class="small" style="margin:8px 0;">Aponte para o código de barras (EAN-13).</div>
+      <video id="video" autoplay muted playsinline></video>
+      <div class="small" id="scanStatus" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal Item -->
+  <div id="modal">
+    <div id="modalBox">
+      <div id="modalHeader">
+        <b id="m_titleTop">Livro</b>
+        <button class="alt" onclick="closeModal()">Fechar</button>
+      </div>
+
+      <div id="m_coverBox" class="field"></div>
+
+      <div class="field"><label><b>ID</b></label><input id="m_id" disabled></div>
+      <div class="field"><label><b>ISBN</b></label><input id="m_isbn" disabled></div>
+      <div class="field"><label><b>Título</b></label><input id="m_title"></div>
+      <div class="field"><label><b>Autor(es)</b></label><input id="m_authors"></div>
+      <div class="field"><label><b>Editora</b></label><input id="m_publisher"></div>
+      <div class="field"><label><b>Edição</b></label><input id="m_edition"></div>
+
+      <div class="row field">
+        <div style="flex:1"><label><b>Ano</b></label><input id="m_year"></div>
+        <div style="flex:1"><label><b>Idioma</b></label><input id="m_lang"></div>
+      </div>
+
+      <div class="field"><label><b>Páginas</b></label><input id="m_pages"></div>
+      <div class="field"><label><b>Fonte</b></label><input id="m_source" disabled></div>
+      <div class="field"><label><b>Link</b></label><input id="m_link"></div>
+      <div class="field"><label><b>Capa (URL)</b></label><input id="m_cover"></div>
+      <div class="field"><label><b>Localização</b></label><input id="m_location"></div>
+      <div class="field"><label><b>Observações</b></label><textarea id="m_notes" rows="4"></textarea></div>
+
+      <div class="row field">
+        <button id="btnSaveItem" onclick="saveItem()">Salvar alterações</button>
+        <span class="small" id="m_status"></span>
       </div>
     </div>
-
-    <div style="margin-top:10px;">
-      <label>
-        <input type="checkbox" id="rememberMe" checked>
-        Permanecer logado neste dispositivo
-      </label>
-    </div>
   </div>
 
-  <!-- CADASTRO -->
-  <div class="card hidden" id="cardCadastro">
-    <b>Cadastrar</b>
-    <p class="muted">Por ISBN ou manual.</p>
+  <!-- ZXing -->
+  <script type="module">
+    import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
+    window.ZXing = ZXing;
+  </script>
 
-    <input id="isbn" placeholder="ISBN (13 dígitos)">
-    <input id="location" placeholder="Localização (opcional)">
-    <textarea id="notes" placeholder="Observações (opcional)"></textarea>
+  <script>
+    // ✅ seu client id
+    const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
 
-    <div class="row">
-      <button onclick="cadastrar()">Cadastrar</button>
-      <button class="secondary" onclick="cadastroManual()">✍️ Manual</button>
-    </div>
-  </div>
+    // ✅ troque pela sua URL /exec (Apps Script)
+    const API_URL  = "COLE_AQUI_SUA_URL_EXEC";
 
-  <!-- ACERVO -->
-  <div class="card hidden" id="cardAcervo">
-    <b>Acervo</b>
-    <input id="search" placeholder="Buscar..." oninput="buscar()">
-    <div id="grid" class="tile-grid"></div>
-  </div>
+    // cache-buster automático (evita Safari/Chrome “ressuscitar html velho”)
+    (function(){
+      const u = new URL(location.href);
+      if (!u.searchParams.get("v")) {
+        if (!sessionStorage.getItem("bib_v_once")) {
+          sessionStorage.setItem("bib_v_once","1");
+          u.searchParams.set("v", Date.now().toString());
+          location.replace(u.toString());
+        }
+      }
+    })();
 
-  <!-- MODAL -->
-  <div class="overlay hidden" id="overlay">
-    <div class="modal" id="modal"></div>
-  </div>
+    const STORAGE_KEY = "bib_session_v3";
 
-  <!-- NAVEGAÇÃO -->
-  <div class="nav hidden" id="nav">
-    <button onclick="show('cardCadastro')">Cadastrar</button>
-    <button onclick="show('cardAcervo')">Acervo</button>
-    <button onclick="logout()">Sair</button>
-  </div>
+    let ID_TOKEN = "";
+    let PIN_SESSION = "";
+    let ME = null; // {email, role}
+    let OFFSET = 0;
+    const LIMIT = 30;
+    let codeReader = null;
 
-<script>
-/* ================== CONFIG ================== */
-const API = "https://script.google.com/macros/s/SEU_DEPLOY_AQUI/exec";
-let SESSION = null;
+    const $ = id => document.getElementById(id);
+    function diag(msg){ $("diag").textContent = msg || ""; }
+    function setTop(msg){ $("topStatus").textContent = msg || ""; }
 
-/* ================== LOGIN GOOGLE ================== */
-function initGoogle() {
-  if (!window.google || !google.accounts) return;
+    function saveSession_(){
+      if (!$("remember").checked) return;
+      const obj = { idToken: ID_TOKEN, session: PIN_SESSION };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch(e){}
+    }
+    function loadSession_(){
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch(e){ return null; }
+    }
+    function clearSession_(){
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+    }
 
-  google.accounts.id.initialize({
-    client_id: "SEU_CLIENT_ID_GOOGLE.apps.googleusercontent.com",
-    callback: onGoogleLogin
-  });
+    function setLoggedOutUI_(msg){
+      ME = null;
+      ID_TOKEN = "";
+      PIN_SESSION = "";
+      $("authStatus").textContent = msg || "Faça login para usar.";
+      $("btnLogout").style.display = "none";
+      $("rolePill").textContent = "—";
+      setTop("Não autenticado.");
 
-  google.accounts.id.renderButton(
-    document.getElementById("gsiBtn"),
-    { theme: "outline", size: "large" }
-  );
-}
+      $("navUsers").classList.add("hidden");
+      $("screenUsers").classList.add("hidden");
 
-function onGoogleLogin(res) {
-  authenticate({ idToken: res.credential });
-}
+      $("btnCadastrar").disabled = true;
+    }
 
-/* ================== LOGIN PIN ================== */
-function loginPin() {
-  authenticate({
-    email: document.getElementById("pin_email").value,
-    pin: document.getElementById("pin_code").value
-  });
-}
+    function setLoggedInUI_(email, role){
+      $("authStatus").textContent = "✅ Logado.";
+      $("btnLogout").style.display = "inline-block";
+      $("rolePill").textContent = role;
+      setTop(`Logado: ${email} (${role})`);
 
-/* ================== AUTH ================== */
-function authenticate(data) {
-  fetch(API + "?action=login", {
-    method: "POST",
-    body: JSON.stringify(data)
-  })
-  .then(r => r.json())
-  .then(r => {
-    if (!r.ok) return alert(r.message);
-    SESSION = r;
-    document.getElementById("status").innerText =
-      "Logado: " + r.email + " (" + r.role + ")";
-    document.getElementById("cardLogin").classList.add("hidden");
-    document.getElementById("nav").classList.remove("hidden");
-    document.getElementById("cardCadastro").classList.remove("hidden");
-    document.getElementById("cardAcervo").classList.remove("hidden");
-    buscar();
-  });
-}
+      const canEdit = (role === "admin" || role === "editor");
+      $("btnCadastrar").disabled = !canEdit;
 
-/* ================== UI ================== */
-function show(id) {
-  ["cardCadastro","cardAcervo"].forEach(x =>
-    document.getElementById(x).classList.add("hidden")
-  );
-  document.getElementById(id).classList.remove("hidden");
-}
+      if (role === "admin") {
+        $("navUsers").classList.remove("hidden");
+      } else {
+        $("navUsers").classList.add("hidden");
+        $("screenUsers").classList.add("hidden");
+      }
+    }
 
-function logout() {
-  SESSION = null;
-  location.reload();
-}
+    // JSONP helper
+    function api(action, payload = {}) {
+      return new Promise((resolve, reject) => {
+        const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        window[cb] = (data) => {
+          try { delete window[cb]; } catch(e) {}
+          script.remove();
+          resolve(data);
+        };
 
-/* ================== ACERVO ================== */
-function buscar() {
-  fetch(API + "?action=buscar&query=" + encodeURIComponent(search.value))
-    .then(r=>r.json())
-    .then(r=>{
-      const g = document.getElementById("grid");
-      g.innerHTML="";
-      r.items.forEach(it=>{
-        const d=document.createElement("div");
-        d.className="tile";
-        d.innerHTML=`
-          <img src="${it.capa || ''}" onerror="this.src='';this.alt='Sem capa'">
-          <b>${it.title||"(sem título)"}</b>
-          <span>${it.authors||""}</span>
-        `;
-        g.appendChild(d);
+        const params = new URLSearchParams();
+        params.set("callback", cb);
+        params.set("action", action);
+        if (ID_TOKEN) params.set("idToken", ID_TOKEN);
+        if (PIN_SESSION) params.set("session", PIN_SESSION);
+
+        Object.keys(payload).forEach(k => {
+          const v = payload[k];
+          if (v == null) return;
+          if (typeof v === "object") params.set(k, encodeURIComponent(JSON.stringify(v)));
+          else params.set(k, String(v));
+        });
+
+        const script = document.createElement("script");
+        script.src = API_URL + "?" + params.toString();
+        script.onerror = () => {
+          try { delete window[cb]; } catch(e) {}
+          script.remove();
+          reject(new Error("Falha ao chamar API (JSONP)."));
+        };
+        document.body.appendChild(script);
       });
-    });
-}
+    }
 
-/* ================== CADASTRO ================== */
-function cadastrar() {
-  fetch(API + "?action=cadastrar", {
-    method:"POST",
-    body: JSON.stringify({
-      isbn:isbn.value,
-      extras:{ location:location.value, notes:notes.value }
-    })
-  })
-  .then(r=>r.json())
-  .then(r=>{
-    alert(r.message || "Concluído");
-    buscar();
-  });
-}
+    async function validateSession_(){
+      const me = await api("me");
+      if (!me || !me.ok) throw new Error(me?.message || "Sem permissão.");
+      ME = { email: me.email, role: me.role };
+      setLoggedInUI_(ME.email, ME.role);
+      saveSession_();
+      await carregarRecentes();
+      await buscar();
+      if (ME.role === "admin") loadUsers();
+      loadStats();
+    }
 
-function cadastroManual() {
-  alert("Cadastro manual será aberto aqui.");
-}
+    // ===== Login Google robusto =====
+    function initGoogleLogin(){
+      const showFallback = (msg) => {
+        $("fallbackLogin").style.display = "inline-block";
+        diag(msg);
+      };
 
-/* ================== START ================== */
-window.onload = () => {
-  initGoogle();
-  document.getElementById("status").innerText = "";
-};
-</script>
+      const start = () => {
+        try {
+          google.accounts.id.initialize({
+            client_id: CLIENT_ID,
+            itp_support: true,
+            auto_select: false,
+            callback: async (resp) => {
+              ID_TOKEN = resp.credential || "";
+              diag("Token Google recebido.");
+              try { await validateSession_(); } catch(e){ showFallback("Falha ao validar acesso."); }
+            }
+          });
 
+          google.accounts.id.renderButton($("gsiBtn"), {
+            theme: "outline",
+            size: "large",
+            text: "signin_with"
+          });
+
+          setTimeout(() => {
+            const empty = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
+            if (empty) showFallback("Botão padrão não renderizou. Use o alternativo.");
+          }, 1200);
+
+        } catch (e) {
+          showFallback("Erro ao iniciar login do Google.");
+        }
+      };
+
+      const t0 = Date.now();
+      (function wait(){
+        if (window.__gsiFailed) { showFallback("Falha ao carregar login do Google."); return; }
+        if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) { start(); return; }
+        if (Date.now() - t0 > 7000) { showFallback("Login do Google não carregou a tempo."); return; }
+        setTimeout(wait, 150);
+      })();
+    }
+
+    function loginFallback(){
+      try { google.accounts.id.prompt(); }
+      catch { diag("Falha ao abrir login do Google."); }
+    }
+
+    // ===== Login PIN =====
+    async function loginPin(){
+      const email = $("pin_email").value.trim().toLowerCase();
+      const pin   = $("pin_code").value.trim();
+      if (!email.includes("@")) return diag("Email inválido.");
+      if (!pin) return diag("Informe o PIN.");
+
+      diag("Autenticando PIN...");
+      const res = await api("pin_login", { email, pin });
+      if (!res || !res.ok) return diag(res?.message || "Falha.");
+
+      PIN_SESSION = res.session;
+      ID_TOKEN = "";
+      diag("PIN OK.");
+      await validateSession_();
+    }
+
+    function logout(){
+      clearSession_();
+      try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+      setLoggedOutUI_("Você saiu. Faça login para usar.");
+      diag("Sessão removida deste dispositivo.");
+      showScreen("Cadastrar");
+    }
+
+    // ===== Navegação =====
+    function showScreen(name){
+      $("screenCadastrar").classList.toggle("hidden", name !== "Cadastrar");
+      $("screenAcervo").classList.toggle("hidden", name !== "Acervo");
+      $("screenUsers").classList.toggle("hidden", name !== "Users");
+      $("screenStats").classList.toggle("hidden", name !== "Stats");
+
+      $("navCadastrar").classList.toggle("active", name === "Cadastrar");
+      $("navAcervo").classList.toggle("active", name === "Acervo");
+      $("navUsers").classList.toggle("active", name === "Users");
+      $("navStats").classList.toggle("active", name === "Stats");
+
+      if (name === "Users" && ME && ME.role === "admin") loadUsers();
+    }
+
+    // ===== Cadastro ISBN + confirmação "já cadastrado" =====
+    async function cadastrar(){
+      if (!ME) return setStatusCadastrar_("Faça login.");
+      if (!(ME.role === "admin" || ME.role === "editor")) return setStatusCadastrar_("Sem permissão.");
+
+      const isbn = $("isbn").value.trim().replace(/\D/g,"");
+      if (!/^\d{13}$/.test(isbn)) return setStatusCadastrar_("ISBN inválido (13 dígitos).");
+
+      setStatusCadastrar_("Processando...", true);
+
+      const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
+
+      try{
+        let res = await api("cadastrar", { isbn, extras });
+
+        if (res && res.ok && res.exists) {
+          // ✅ popup de confirmação
+          const ok = confirm("Item já cadastrado. Deseja atualizar o cadastro?");
+          if (!ok) { setStatusCadastrar_("Item já cadastrado (não atualizado)."); return; }
+
+          res = await api("cadastrar", { isbn, extras, forceUpdate: 1 });
+        }
+
+        if (!res || !res.ok) return setStatusCadastrar_(res?.message || "Falhou.");
+
+        setStatusCadastrar_(res.message || "✅ OK.");
+        $("isbn").value = "";
+        await carregarRecentes();
+        await buscar();
+      } catch(e){
+        setStatusCadastrar_("Erro: " + (e?.message || e));
+      } finally {
+        $("btnCadastrar").disabled = !(ME && (ME.role==="admin"||ME.role==="editor"));
+      }
+    }
+
+    function setStatusCadastrar_(msg, loading=false){
+      $("statusCadastrar").textContent = msg || "";
+      $("btnCadastrar").disabled = !!loading || !(ME && (ME.role==="admin"||ME.role==="editor"));
+    }
+
+    async function carregarRecentes(){
+      if (!ME) return;
+      const res = await api("recentes", { limit: 10 });
+      const box = $("recentes");
+      box.innerHTML = "";
+      (res.items || []).forEach(it=>{
+        const line = document.createElement("div");
+        line.style.padding = "8px 0";
+        line.style.borderTop = "1px solid #eee";
+        line.innerHTML = `<b>${esc(it.title||"(sem título)")}</b><br><span class="small">${esc(it.authors||"")}</span>`;
+        box.appendChild(line);
+      });
+    }
+
+    // ===== Acervo (Tiles + clique abre modal) =====
+    function buscar(){ OFFSET = 0; return carregarPagina(); }
+
+    async function carregarPagina(){
+      if (!ME) return;
+      const q = $("q").value.trim();
+      const res = await api("buscar", { query: q, offset: OFFSET, limit: LIMIT });
+
+      $("resumo").textContent = `Total: ${res.total || 0} | Página: ${Math.floor(OFFSET/LIMIT)+1}`;
+
+      const grid = $("grid");
+      grid.innerHTML = "";
+
+      (res.items||[]).forEach(it=>{
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.addEventListener("click", ()=>openItem(it.id));
+
+        const cover = document.createElement("div");
+        cover.className = "cover";
+        if (it.cover) {
+          cover.innerHTML = `<img src="${escAttr(it.cover)}" alt="capa" onerror="this.remove(); this.parentNode.textContent='Sem capa';">`;
+        } else {
+          cover.textContent = "Sem capa";
+        }
+
+        const body = document.createElement("div");
+        body.className = "tileBody";
+        body.innerHTML = `
+          <div class="tileTitle">${esc(it.title||"(sem título)")}</div>
+          <div class="tileMeta">${esc(it.authors||"")}</div>
+          <div class="tileMeta">${esc(it.publisher||"")} · ${esc(it.year||"")}</div>
+        `;
+
+        tile.appendChild(cover);
+        tile.appendChild(body);
+        grid.appendChild(tile);
+      });
+    }
+
+    function next(){ OFFSET += LIMIT; carregarPagina(); }
+    function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
+
+    // ===== Modal item =====
+    let CURRENT_ITEM = null;
+
+    async function openItem(id){
+      if (!ME) return;
+
+      $("m_status").textContent = "Carregando...";
+      $("modal").style.display = "block";
+
+      const res = await api("item_get", { id });
+      if (!res || !res.ok) {
+        $("m_status").textContent = res?.message || "Erro.";
+        return;
+      }
+      CURRENT_ITEM = res.item;
+
+      fillModal_(CURRENT_ITEM);
+    }
+
+    function closeModal(){
+      $("modal").style.display = "none";
+      CURRENT_ITEM = null;
+    }
+
+    function fillModal_(it){
+      $("m_status").textContent = "";
+      $("m_titleTop").textContent = it["Título"] || "(sem título)";
+
+      const coverUrl = it["Capa"] || "";
+      $("m_coverBox").innerHTML = coverUrl
+        ? `<div class="cover" style="height:260px;border-radius:14px;overflow:hidden"><img src="${escAttr(coverUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.remove(); this.parentNode.textContent='Sem capa';"></div>`
+        : `<div class="cover" style="height:260px;border-radius:14px">Sem capa</div>`;
+
+      $("m_id").value = it["ID"] || "";
+      $("m_isbn").value = it["ISBN"] || "";
+      $("m_title").value = it["Título"] || "";
+      $("m_authors").value = it["Autor(es)"] || "";
+      $("m_publisher").value = it["Editora"] || "";
+      $("m_edition").value = it["Edição"] || "";
+      $("m_year").value = it["Ano"] || "";
+      $("m_lang").value = it["Idioma"] || "";
+      $("m_pages").value = it["Páginas"] || "";
+      $("m_source").value = it["Fonte"] || "";
+      $("m_link").value = it["Link"] || "";
+      $("m_cover").value = it["Capa"] || "";
+      $("m_location").value = it["Localização"] || "";
+      $("m_notes").value = it["Observações"] || "";
+
+      // Permissões:
+      const role = ME?.role || "viewer";
+      const canEditor = (role === "admin" || role === "editor");
+
+      // viewer: tudo read-only
+      const setRO = (id, ro)=>{ $(id).disabled = ro; };
+
+      if (role === "viewer") {
+        ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,true));
+        $("btnSaveItem").disabled = true;
+        $("btnSaveItem").textContent = "Sem permissão";
+      }
+
+      if (role === "editor") {
+        // editor só: Localização, Observações, Capa
+        ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link"].forEach(x=>setRO(x,true));
+        ["m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
+        $("btnSaveItem").disabled = !canEditor;
+        $("btnSaveItem").textContent = "Salvar alterações";
+      }
+
+      if (role === "admin") {
+        // admin edita quase tudo, mas ISBN e Fonte travados (já estão disabled)
+        ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
+        $("btnSaveItem").disabled = false;
+        $("btnSaveItem").textContent = "Salvar alterações";
+      }
+    }
+
+    async function saveItem(){
+      if (!ME || ME.role === "viewer") return;
+
+      const id = $("m_id").value.trim();
+      const updates = {
+        "Título": $("m_title").value,
+        "Autor(es)": $("m_authors").value,
+        "Editora": $("m_publisher").value,
+        "Edição": $("m_edition").value,
+        "Ano": $("m_year").value,
+        "Idioma": $("m_lang").value,
+        "Páginas": $("m_pages").value,
+        "Link": $("m_link").value,
+        "Capa": $("m_cover").value,
+        "Localização": $("m_location").value,
+        "Observações": $("m_notes").value
+      };
+
+      $("m_status").textContent = "Salvando...";
+      const res = await api("item_update", { payload: { id, updates } });
+
+      if (!res || !res.ok) {
+        $("m_status").textContent = res?.message || "Erro.";
+        return;
+      }
+
+      $("m_status").textContent = "✅ Salvo.";
+      await carregarPagina();
+    }
+
+    // ===== Manual (simples) =====
+    function openManual(){
+      alert("Se você quiser, eu reativo a tela manual completa igual a que você já tinha — aqui eu mantive simples para focar no login e edição.");
+    }
+
+    // ===== Scanner ISBN =====
+    async function abrirScanner(){
+      if (!ME || !(ME.role==="admin" || ME.role==="editor")) return setStatusCadastrar_("Sem permissão.");
+      $("scannerModal").style.display = "block";
+      $("scanStatus").textContent = "Abrindo câmera…";
+
+      if (!window.ZXing) { $("scanStatus").textContent = "Scanner não carregou. Recarregue."; return; }
+
+      try {
+        codeReader = new window.ZXing.BrowserMultiFormatReader();
+        const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
+        const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
+
+        await codeReader.decodeFromVideoDevice(backCam?.deviceId, $("video"), (result) => {
+          if (result) {
+            const raw = result.getText().replace(/\D/g, "");
+            if (raw.length !== 13) return;
+            $("isbn").value = raw;
+            $("scanStatus").textContent = "✅ Detectado";
+            fecharScanner();
+            $("isbn").focus();
+          }
+        });
+
+        $("scanStatus").textContent = "Aponte para o código…";
+      } catch (e) {
+        $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
+      }
+    }
+
+    function fecharScanner(){
+      $("scannerModal").style.display = "none";
+      try { codeReader && codeReader.reset(); } catch(e){}
+      codeReader = null;
+    }
+
+    // ===== Users (admin) =====
+    async function loadUsers(){
+      if (!ME || ME.role !== "admin") return;
+
+      $("usersStatus").textContent = "Carregando…";
+      const res = await api("users_list");
+      if (!res || !res.ok) { $("usersStatus").textContent = res?.message || "Erro."; return; }
+
+      $("usersStatus").textContent = "OK.";
+      const list = $("usersList");
+      list.innerHTML = "";
+
+      (res.users||[]).forEach(u=>{
+        const box = document.createElement("div");
+        box.style.padding = "10px 0";
+        box.style.borderTop = "1px solid #eee";
+
+        const b = document.createElement("b");
+        b.textContent = u.email;
+        box.appendChild(b);
+
+        const meta = document.createElement("div");
+        meta.className = "small";
+        meta.style.marginTop = "6px";
+        meta.textContent = `role: ${u.role} · active: ${u.active ? "TRUE":"FALSE"} · ${u.name||""}`;
+        box.appendChild(meta);
+
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.marginTop = "8px";
+
+        const btn = document.createElement("button");
+        btn.className = "alt";
+        btn.textContent = "Editar";
+        btn.addEventListener("click", ()=>fillUser(u));
+
+        row.appendChild(btn);
+        box.appendChild(row);
+
+        list.appendChild(box);
+      });
+    }
+
+    function fillUser(u){
+      $("u_email").value = u.email || "";
+      $("u_role").value = u.role || "viewer";
+      $("u_active").value = u.active ? "true" : "false";
+      $("u_name").value = u.name || "";
+      $("u_pin").value = "";
+      $("usersStatus").textContent = "Carregado para edição.";
+    }
+
+    async function saveUser(){
+      if (!ME || ME.role !== "admin") return;
+
+      const user = {
+        email: $("u_email").value.trim().toLowerCase(),
+        role: $("u_role").value,
+        active: $("u_active").value === "true",
+        name: $("u_name").value.trim()
+      };
+      if (!user.email.includes("@")) { $("usersStatus").textContent = "Email inválido."; return; }
+
+      $("usersStatus").textContent = "Salvando…";
+      const res = await api("users_upsert", { user });
+      if (!res || !res.ok) { $("usersStatus").textContent = res?.message || "Erro."; return; }
+
+      // se veio PIN, define
+      const pin = $("u_pin").value.trim();
+      if (pin) {
+        const r2 = await api("users_set_pin", { payload: { email: user.email, pin } });
+        if (!r2 || !r2.ok) { $("usersStatus").textContent = "Usuário salvo, mas falha ao definir PIN."; return; }
+      }
+
+      $("usersStatus").textContent = `✅ ${res.action}`;
+      await loadUsers();
+    }
+
+    // ===== Stats =====
+    async function loadStats(){
+      if (!ME) return;
+      const res = await api("stats");
+      if (!res || !res.ok) return;
+      const lines = [];
+      lines.push(`<b>Total de títulos:</b> ${res.total}`);
+      lines.push(`<div style="height:10px"></div><b>Top autores:</b>`);
+      lines.push((res.topAuthors||[]).map(a=>`${esc(a.name)} (${a.count})`).join("<br>") || "—");
+      lines.push(`<div style="height:10px"></div><b>Top editoras:</b>`);
+      lines.push((res.topPublishers||[]).map(a=>`${esc(a.name)} (${a.count})`).join("<br>") || "—");
+      $("statsBox").innerHTML = lines.join("<br>");
+    }
+
+    // ===== Escape =====
+    function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+    function escAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
+
+    // ===== Boot =====
+    (async function boot(){
+      setLoggedOutUI_("Faça login para usar.");
+      initGoogleLogin();
+
+      const saved = loadSession_();
+      if (saved) {
+        ID_TOKEN = saved.idToken || "";
+        PIN_SESSION = saved.session || "";
+        if (ID_TOKEN || PIN_SESSION) {
+          diag("Sessão salva encontrada. Validando…");
+          try {
+            await validateSession_();
+            diag("Sessão ativa.");
+          } catch(e) {
+            clearSession_();
+            setLoggedOutUI_("Sessão expirada. Faça login novamente.");
+            $("fallbackLogin").style.display = "inline-block";
+            diag("Sessão expirada.");
+          }
+        } else {
+          setTop("Não autenticado.");
+        }
+      } else {
+        setTop("Não autenticado.");
+      }
+
+      showScreen("Cadastrar");
+    })();
+  </script>
 </body>
 </html>
