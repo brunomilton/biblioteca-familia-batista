@@ -432,7 +432,11 @@
             callback: async (resp) => {
               ID_TOKEN = resp.credential || "";
               diag("Token Google recebido.");
-              try { await validateSession_(); } catch(e){ showFallback("Falha ao validar acesso."); }
+              try {
+                await validateSession_();
+              } catch (e) {
+                showFallback("Falha ao validar acesso: " + (e?.message || e));
+              }
             }
           });
 
