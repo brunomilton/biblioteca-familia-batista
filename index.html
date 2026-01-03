@@ -3,17 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <title>Biblioteca - Família Batista</title>
-
-  <!-- Google Identity Services -->
-  <script>
-    window.__gsiLoaded = false;
-    window.__gsiFailed = false;
-    function __onGsiLoad(){ window.__gsiLoaded = true; }
-    function __onGsiError(){ window.__gsiFailed = true; }
-  </script>
-  <script src="https://accounts.google.com/gsi/client" onload="__onGsiLoad()" onerror="__onGsiError()"></script>
 
   <style>
     body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial;margin:0;background:#f5f6f8}
@@ -23,9 +13,9 @@
     .wrap{padding:14px 14px 82px}
     .card{background:#fff;border:1px solid #e6e6e6;border-radius:16px;padding:14px;margin-bottom:12px}
     input,textarea,select{width:100%;padding:10px;border-radius:12px;border:1px solid #d7d7d7;font-size:16px;box-sizing:border-box}
-    button{padding:10px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-size:16px}
+    button{padding:10px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-size:16px;cursor:pointer}
     button.alt{background:#fff;color:#111;border-color:#bbb}
-    button:disabled{opacity:.6}
+    button:disabled{opacity:.6;cursor:not-allowed}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .small{color:#666;font-size:13px}
     .hidden{display:none!important}
@@ -36,7 +26,6 @@
 
     .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #ddd;font-size:12px;color:#444;background:#fafafa}
 
-    /* Tiles */
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:12px}
     .tile{background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
     .cover{width:100%;height:190px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666}
@@ -45,29 +34,29 @@
     .tileTitle{font-weight:700;font-size:13px;line-height:1.2}
     .tileMeta{margin-top:6px;font-size:12px;color:#666;line-height:1.2}
 
-    /* Modal item (com rolagem interna) */
     #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);padding:14px;z-index:50}
     #modalBox{background:#fff;border-radius:16px;max-width:720px;margin:0 auto;max-height:88vh;overflow:auto;padding:14px}
     #modalHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px;z-index:5}
     #modalHeader b{font-size:16px}
     .field{margin-top:10px}
 
-    /* scanner modal */
     #scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);padding:14px;z-index:60}
     #scannerBox{background:#fff;border-radius:16px;padding:12px;max-width:720px;margin:0 auto}
     #video{width:100%;border-radius:14px;border:1px solid #ddd}
 
-    /* remember row */
     .rememberRow{display:flex;align-items:center;gap:10px;width:100%}
     .rememberRow input{width:20px;height:20px;flex:0 0 auto}
     .rememberRow span{flex:1 1 auto;white-space:normal;word-break:break-word}
+
+    .hr{height:1px;background:#eee;margin:12px 0}
+    .warn{color:#b45309}
   </style>
 </head>
 
 <body>
   <div class="topbar">
     <div class="title">📚 Biblioteca - Família Batista</div>
-    <div class="sub" id="topStatus">Carregando…</div>
+    <div class="sub" id="topStatus">Inicializando…</div>
   </div>
 
   <div class="wrap">
@@ -84,16 +73,21 @@
         </div>
       </div>
 
-      <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
+      <!-- Google -->
+      <div style="margin-top:10px">
+        <div id="gsiBtn" style="min-height:44px;"></div>
 
-      <button id="fallbackLogin"
-              class="alt"
-              style="display:none; margin-top:8px;"
-              onclick="loginFallback()">
-        Entrar com Google
-      </button>
+        <!-- ✅ SEMPRE VISÍVEL (não some mais) -->
+        <div class="row" style="margin-top:8px;">
+          <button id="btnGoogle" class="alt" onclick="loginWithGoogle()">Entrar com Google</button>
+          <span class="small" id="gsiHint"></span>
+        </div>
+      </div>
 
-      <div class="small" style="margin-top:10px"><b>Ou entrar com Email + PIN</b></div>
+      <div class="hr"></div>
+
+      <!-- PIN -->
+      <div class="small"><b>Ou entrar com Email + PIN</b></div>
       <div class="row" style="margin-top:8px">
         <input id="pin_email" placeholder="email@exemplo.com" autocomplete="username email">
         <input id="pin_code" placeholder="PIN" type="password" inputmode="numeric" autocomplete="current-password">
@@ -288,43 +282,37 @@
     </div>
   </div>
 
-  <!-- ZXing -->
-  <script type="module">
-    import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
-    window.ZXing = ZXing;
-  </script>
-
   <script>
-    // ✅ seu client id
+    // ========= CONFIG =========
     const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
-
-    // ✅ sua URL /exec (Apps Script)
     const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
-
-    // cache-buster automático (evita Safari/Chrome “ressuscitar html velho”)
-    (function(){
-      const u = new URL(location.href);
-      if (!u.searchParams.get("v")) {
-        if (!sessionStorage.getItem("bib_v_once")) {
-          sessionStorage.setItem("bib_v_once","1");
-          u.searchParams.set("v", Date.now().toString());
-          location.replace(u.toString());
-        }
-      }
-    })();
-
     const STORAGE_KEY = "bib_session_v3";
 
+    // ========= STATE =========
     let ID_TOKEN = "";
     let PIN_SESSION = "";
-    let ME = null; // {email, role}
+    let ME = null;
     let OFFSET = 0;
     const LIMIT = 30;
-    let codeReader = null;
 
+    let codeReader = null; // ZXing
+    let zxingLoaded = false;
+
+    // ========= HELPERS =========
     const $ = id => document.getElementById(id);
-    function diag(msg){ $("diag").textContent = msg || ""; }
     function setTop(msg){ $("topStatus").textContent = msg || ""; }
+    function diag(msg, warn=false){
+      $("diag").innerHTML = warn ? `<span class="warn">${esc(msg)}</span>` : esc(msg||"");
+    }
+
+    window.addEventListener("error", (ev)=>{
+      diag("Erro JS: " + (ev?.message || ev), true);
+      setTop("Erro na página (veja diagnóstico).");
+    });
+    window.addEventListener("unhandledrejection", (ev)=>{
+      diag("Promise rejeitada: " + (ev?.reason?.message || ev?.reason || ev), true);
+      setTop("Erro na página (veja diagnóstico).");
+    });
 
     function saveSession_(){
       if (!$("remember").checked) return;
@@ -346,10 +334,8 @@
       $("btnLogout").style.display = "none";
       $("rolePill").textContent = "—";
       setTop("Não autenticado.");
-
       $("navUsers").classList.add("hidden");
       $("screenUsers").classList.add("hidden");
-
       $("btnCadastrar").disabled = true;
     }
 
@@ -358,33 +344,22 @@
       $("btnLogout").style.display = "inline-block";
       $("rolePill").textContent = role;
       setTop(`Logado: ${email} (${role})`);
-
-      const canEdit = (role === "admin" || role === "editor");
-      $("btnCadastrar").disabled = !canEdit;
-
-      if (role === "admin") {
-        $("navUsers").classList.remove("hidden");
-      } else {
+      $("btnCadastrar").disabled = !(role === "admin" || role === "editor");
+      if (role === "admin") $("navUsers").classList.remove("hidden");
+      else {
         $("navUsers").classList.add("hidden");
         $("screenUsers").classList.add("hidden");
       }
     }
 
-    // JSONP helper (corrigido: sem encodeURIComponent para objetos + cache-buster por chamada)
+    // ========= JSONP (robusto + anti-cache) =========
     function api(action, payload = {}) {
       return new Promise((resolve, reject) => {
         const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-
-        window[cb] = (data) => {
-          try { delete window[cb]; } catch(e) {}
-          script.remove();
-          resolve(data);
-        };
-
         const params = new URLSearchParams();
         params.set("callback", cb);
         params.set("action", action);
-        params.set("t", Date.now().toString()); // ✅ evita cache do JSONP
+        params.set("t", Date.now().toString()); // evita cache
         if (ID_TOKEN) params.set("idToken", ID_TOKEN);
         if (PIN_SESSION) params.set("session", PIN_SESSION);
 
@@ -395,6 +370,12 @@
         });
 
         const script = document.createElement("script");
+        window[cb] = (data) => {
+          try { delete window[cb]; } catch(e) {}
+          script.remove();
+          resolve(data);
+        };
+
         script.src = API_URL + "?" + params.toString();
         script.onerror = () => {
           try { delete window[cb]; } catch(e) {}
@@ -417,83 +398,91 @@
       loadStats();
     }
 
-    // ===== Login Google robusto (com re-render) =====
-    function initGoogleLogin(){
-      const showFallback = (msg) => {
-        $("fallbackLogin").style.display = "inline-block";
-        diag(msg || "");
-      };
+    // ========= GOOGLE LOGIN (NÃO SOME) =========
+    function loadGsiScript_(){
+      return new Promise((resolve, reject)=>{
+        if (window.google && google.accounts && google.accounts.id) return resolve(true);
 
-      const start = () => {
-        try {
-          google.accounts.id.initialize({
-            client_id: CLIENT_ID,
-            itp_support: true,
-            auto_select: false,
-            callback: async (resp) => {
-              ID_TOKEN = resp.credential || "";
-              diag("Token Google recebido.");
-              try {
-                await validateSession_();
-              } catch (e) {
-                showFallback("Falha ao validar acesso: " + (e?.message || e));
-              }
-            }
-          });
-
-          const render = () => {
-            try {
-              google.accounts.id.renderButton($("gsiBtn"), {
-                theme: "outline",
-                size: "large",
-                text: "signin_with"
-              });
-            } catch(e) {}
-          };
-
-          render();
-
-          // 1ª checagem: tenta re-render 1 vez se estiver vazio
-          setTimeout(() => {
-            const empty = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
-            if (empty) render();
-          }, 1200);
-
-          // 2ª checagem: se ainda vazio, mostra fallback
-          setTimeout(() => {
-            const empty2 = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
-            if (empty2) showFallback("Botão do Google não renderizou. Use o alternativo.");
-          }, 2200);
-
-        } catch (e) {
-          showFallback("Erro ao iniciar login do Google.");
+        // já existe tag?
+        const existing = document.querySelector('script[data-gsi="1"]');
+        if (existing) {
+          // espera um pouco
+          const t0 = Date.now();
+          (function wait(){
+            if (window.google && google.accounts && google.accounts.id) return resolve(true);
+            if (Date.now()-t0 > 7000) return reject(new Error("GSI não carregou a tempo."));
+            setTimeout(wait, 150);
+          })();
+          return;
         }
-      };
 
-      const t0 = Date.now();
-      (function wait(){
-        if (window.__gsiFailed) { showFallback("Falha ao carregar login do Google."); return; }
-        if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) { start(); return; }
-        if (Date.now() - t0 > 7000) { showFallback("Login do Google não carregou a tempo."); return; }
-        setTimeout(wait, 150);
-      })();
+        const s = document.createElement("script");
+        s.src = "https://accounts.google.com/gsi/client";
+        s.async = true;
+        s.defer = true;
+        s.dataset.gsi = "1";
+        s.onload = ()=>resolve(true);
+        s.onerror = ()=>reject(new Error("Falha ao carregar script do Google."));
+        document.head.appendChild(s);
+      });
     }
 
-    function loginFallback(){
-      try { google.accounts.id.prompt(); }
-      catch { diag("Falha ao abrir login do Google."); }
+    function initGoogleButton_(){
+      if (!(window.google && google.accounts && google.accounts.id)) {
+        $("gsiHint").textContent = "Google não carregou (use o botão acima para tentar novamente).";
+        return;
+      }
+
+      try{
+        google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          itp_support: true,
+          auto_select: false,
+          callback: async (resp) => {
+            ID_TOKEN = resp.credential || "";
+            diag("Token Google recebido.");
+            try {
+              await validateSession_();
+            } catch (e) {
+              diag("Falha ao validar acesso: " + (e?.message || e), true);
+            }
+          }
+        });
+
+        // Render do botão “bonito” (se funcionar)
+        try{
+          $("gsiBtn").innerHTML = "";
+          google.accounts.id.renderButton($("gsiBtn"), { theme:"outline", size:"large", text:"signin_with" });
+        } catch(e){}
+
+        $("gsiHint").textContent = "";
+      } catch(e){
+        diag("Erro ao iniciar Google: " + (e?.message || e), true);
+      }
     }
 
-    // ===== Login PIN =====
+    async function loginWithGoogle(){
+      diag("Abrindo login do Google…");
+      try{
+        await loadGsiScript_();
+        initGoogleButton_();
+        // prompt abre fluxo mesmo se o render falhar
+        google.accounts.id.prompt();
+      } catch(e){
+        diag("Login Google indisponível: " + (e?.message || e), true);
+      }
+    }
+
+    // ========= PIN LOGIN =========
     async function loginPin(){
       const email = $("pin_email").value.trim().toLowerCase();
       const pin   = $("pin_code").value.trim();
-      if (!email.includes("@")) return diag("Email inválido.");
-      if (!pin) return diag("Informe o PIN.");
+      if (!email.includes("@")) return diag("Email inválido.", true);
+      if (!pin) return diag("Informe o PIN.", true);
 
-      diag("Autenticando PIN...");
+      diag("Autenticando PIN…");
       const res = await api("pin_login", { email, pin });
-      if (!res || !res.ok) return diag(res?.message || "Falha.");
+      if (!res || !res.ok) return diag(res?.message || "Falha.", true);
 
       PIN_SESSION = res.session;
       ID_TOKEN = "";
@@ -503,13 +492,13 @@
 
     function logout(){
       clearSession_();
-      try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+      try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); } catch(e){}
       setLoggedOutUI_("Você saiu. Faça login para usar.");
       diag("Sessão removida deste dispositivo.");
       showScreen("Cadastrar");
     }
 
-    // ===== Navegação =====
+    // ========= NAV =========
     function showScreen(name){
       $("screenCadastrar").classList.toggle("hidden", name !== "Cadastrar");
       $("screenAcervo").classList.toggle("hidden", name !== "Acervo");
@@ -524,7 +513,7 @@
       if (name === "Users" && ME && ME.role === "admin") loadUsers();
     }
 
-    // ===== Cadastro ISBN + confirmação "já cadastrado" =====
+    // ========= CADASTRO =========
     async function cadastrar(){
       if (!ME) return setStatusCadastrar_("Faça login.");
       if (!(ME.role === "admin" || ME.role === "editor")) return setStatusCadastrar_("Sem permissão.");
@@ -533,7 +522,6 @@
       if (!/^\d{13}$/.test(isbn)) return setStatusCadastrar_("ISBN inválido (13 dígitos).");
 
       setStatusCadastrar_("Processando...", true);
-
       const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
 
       try{
@@ -542,7 +530,6 @@
         if (res && res.ok && res.exists) {
           const ok = confirm("Item já cadastrado. Deseja atualizar o cadastro?");
           if (!ok) { setStatusCadastrar_("Item já cadastrado (não atualizado)."); return; }
-
           res = await api("cadastrar", { isbn, extras, forceUpdate: 1 });
         }
 
@@ -578,7 +565,7 @@
       });
     }
 
-    // ===== Acervo (Tiles + clique abre modal) =====
+    // ========= ACERVO =========
     function buscar(){ OFFSET = 0; return carregarPagina(); }
 
     async function carregarPagina(){
@@ -587,7 +574,6 @@
       const res = await api("buscar", { query: q, offset: OFFSET, limit: LIMIT });
 
       $("resumo").textContent = `Total: ${res.total || 0} | Página: ${Math.floor(OFFSET/LIMIT)+1}`;
-
       const grid = $("grid");
       grid.innerHTML = "";
 
@@ -621,12 +607,11 @@
     function next(){ OFFSET += LIMIT; carregarPagina(); }
     function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
 
-    // ===== Modal item =====
+    // ========= MODAL =========
     let CURRENT_ITEM = null;
 
     async function openItem(id){
       if (!ME) return;
-
       $("m_status").textContent = "Carregando...";
       $("modal").style.display = "block";
 
@@ -669,23 +654,18 @@
       $("m_notes").value = it["Observações"] || "";
 
       const role = ME?.role || "viewer";
-      const canEditor = (role === "admin" || role === "editor");
       const setRO = (id, ro)=>{ $(id).disabled = ro; };
 
       if (role === "viewer") {
         ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,true));
         $("btnSaveItem").disabled = true;
         $("btnSaveItem").textContent = "Sem permissão";
-      }
-
-      if (role === "editor") {
+      } else if (role === "editor") {
         ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link"].forEach(x=>setRO(x,true));
         ["m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
-        $("btnSaveItem").disabled = !canEditor;
+        $("btnSaveItem").disabled = false;
         $("btnSaveItem").textContent = "Salvar alterações";
-      }
-
-      if (role === "admin") {
+      } else {
         ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
         $("btnSaveItem").disabled = false;
         $("btnSaveItem").textContent = "Salvar alterações";
@@ -722,27 +702,47 @@
       await carregarPagina();
     }
 
-    // ===== Manual (simples) =====
     function openManual(){
-      alert("Se você quiser, eu reativo a tela manual completa igual a que você já tinha — aqui eu mantive simples para focar no login e edição.");
+      alert("Se você quiser, eu reativo a tela manual completa. Mantive simples aqui para estabilizar login/fluxo.");
     }
 
-    // ===== Scanner ISBN =====
+    // ========= SCANNER (ZXING sob demanda) =========
+    async function loadZxing_(){
+      if (zxingLoaded) return true;
+      return new Promise((resolve, reject)=>{
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js";
+        s.onload = ()=>{ zxingLoaded = true; resolve(true); };
+        s.onerror = ()=>reject(new Error("Falha ao carregar ZXing."));
+        document.head.appendChild(s);
+      });
+    }
+
     async function abrirScanner(){
       if (!ME || !(ME.role==="admin" || ME.role==="editor")) return setStatusCadastrar_("Sem permissão.");
       $("scannerModal").style.display = "block";
       $("scanStatus").textContent = "Abrindo câmera…";
 
-      if (!window.ZXing) { $("scanStatus").textContent = "Scanner não carregou. Recarregue."; return; }
+      try{
+        await loadZxing_();
+      } catch(e){
+        $("scanStatus").textContent = "Scanner indisponível: " + (e?.message || e);
+        return;
+      }
 
       try {
-        codeReader = new window.ZXing.BrowserMultiFormatReader();
-        const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
+        // UMD: ZXing já existe em window.ZXing
+        const ZX = window.ZXing;
+        if (!ZX) throw new Error("ZXing não disponível.");
+
+        codeReader = new ZX.BrowserMultiFormatReader();
+
+        const devices = await ZX.BrowserCodeReader.listVideoInputDevices();
         const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
 
         await codeReader.decodeFromVideoDevice(backCam?.deviceId, $("video"), (result) => {
           if (result) {
-            const raw = result.getText().replace(/\D/g, "");
+            const raw = String(result.text || result.getText?.() || "").replace(/\D/g, "");
             if (raw.length !== 13) return;
             $("isbn").value = raw;
             $("scanStatus").textContent = "✅ Detectado";
@@ -763,10 +763,9 @@
       codeReader = null;
     }
 
-    // ===== Users (admin) =====
+    // ========= USERS / STATS =========
     async function loadUsers(){
       if (!ME || ME.role !== "admin") return;
-
       $("usersStatus").textContent = "Carregando…";
       const res = await api("users_list");
       if (!res || !res.ok) { $("usersStatus").textContent = res?.message || "Erro."; return; }
@@ -779,40 +778,25 @@
         const box = document.createElement("div");
         box.style.padding = "10px 0";
         box.style.borderTop = "1px solid #eee";
-
-        const b = document.createElement("b");
-        b.textContent = u.email;
-        box.appendChild(b);
-
-        const meta = document.createElement("div");
-        meta.className = "small";
-        meta.style.marginTop = "6px";
-        meta.textContent = `role: ${u.role} · active: ${u.active ? "TRUE":"FALSE"} · ${u.name||""}`;
-        box.appendChild(meta);
-
+        box.innerHTML = `<b>${esc(u.email)}</b><div class="small" style="margin-top:6px">role: ${esc(u.role)} · active: ${u.active ? "TRUE":"FALSE"} · ${esc(u.name||"")}</div>`;
         const row = document.createElement("div");
         row.className = "row";
         row.style.marginTop = "8px";
-
         const btn = document.createElement("button");
         btn.className = "alt";
         btn.textContent = "Editar";
-        btn.addEventListener("click", ()=>fillUser(u));
-
+        btn.addEventListener("click", ()=>{
+          $("u_email").value = u.email || "";
+          $("u_role").value = u.role || "viewer";
+          $("u_active").value = u.active ? "true" : "false";
+          $("u_name").value = u.name || "";
+          $("u_pin").value = "";
+          $("usersStatus").textContent = "Carregado para edição.";
+        });
         row.appendChild(btn);
         box.appendChild(row);
-
         list.appendChild(box);
       });
-    }
-
-    function fillUser(u){
-      $("u_email").value = u.email || "";
-      $("u_role").value = u.role || "viewer";
-      $("u_active").value = u.active ? "true" : "false";
-      $("u_name").value = u.name || "";
-      $("u_pin").value = "";
-      $("usersStatus").textContent = "Carregado para edição.";
     }
 
     async function saveUser(){
@@ -840,28 +824,33 @@
       await loadUsers();
     }
 
-    // ===== Stats =====
     async function loadStats(){
       if (!ME) return;
       const res = await api("stats");
       if (!res || !res.ok) return;
       const lines = [];
       lines.push(`<b>Total de títulos:</b> ${res.total}`);
-      lines.push(`<div style="height:10px"></div><b>Top autores:</b>`);
-      lines.push((res.topAuthors||[]).map(a=>`${esc(a.name)} (${a.count})`).join("<br>") || "—");
-      lines.push(`<div style="height:10px"></div><b>Top editoras:</b>`);
-      lines.push((res.topPublishers||[]).map(a=>`${esc(a.name)} (${a.count})`).join("<br>") || "—");
-      $("statsBox").innerHTML = lines.join("<br>");
+      lines.push(`<br><br><b>Top autores:</b><br>` + ((res.topAuthors||[]).map(a=>`${esc(a.name)} (${a.count})`).join("<br>") || "—"));
+      lines.push(`<br><br><b>Top editoras:</b><br>` + ((res.topPublishers||[]).map(a=>`${esc(a.name)} (${a.count})`).join("<br>") || "—"));
+      $("statsBox").innerHTML = lines.join("");
     }
 
-    // ===== Escape =====
+    // ========= ESCAPE =========
     function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
     function escAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
 
-    // ===== Boot =====
+    // ========= BOOT =========
     (async function boot(){
       setLoggedOutUI_("Faça login para usar.");
-      initGoogleLogin();
+      setTop("Não autenticado.");
+
+      // tenta carregar GSI no boot (mas NÃO quebra se falhar)
+      try{
+        await loadGsiScript_();
+        initGoogleButton_();
+      } catch(e){
+        $("gsiHint").textContent = "Google não carregou automaticamente. Use o botão para tentar.";
+      }
 
       const saved = loadSession_();
       if (saved) {
@@ -875,14 +864,9 @@
           } catch(e) {
             clearSession_();
             setLoggedOutUI_("Sessão expirada. Faça login novamente.");
-            $("fallbackLogin").style.display = "inline-block";
-            diag("Sessão expirada.");
+            diag("Sessão expirada.", true);
           }
-        } else {
-          setTop("Não autenticado.");
         }
-      } else {
-        setTop("Não autenticado.");
       }
 
       showScreen("Cadastrar");
