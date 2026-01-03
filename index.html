@@ -1,9 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Google Identity Services -->
@@ -18,83 +15,50 @@
           onerror="__onGsiError()"></script>
 
   <style>
-    :root{
-      --bg:#f5f6f8;
-      --card:#fff;
-      --border:#e6e6e6;
-      --text:#111;
-      --muted:#666;
-      --btn:#111;
-      --btnText:#fff;
-      --btnAltBg:#fff;
-      --btnAltText:#111;
-    }
-    body { font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:var(--text); }
-    .topbar { position:sticky; top:0; background:var(--card); padding:14px 16px; border-bottom:1px solid var(--border); z-index:10; }
-    .title { font-size:18px; font-weight:800; }
-    .sub { font-size:12px; color:var(--muted); margin-top:2px; }
-    .wrap { padding:14px 14px 82px; max-width:1100px; margin:0 auto; }
+    body { font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial; margin:0; background:#f5f6f8; }
+    .topbar { position:sticky; top:0; background:#fff; padding:14px 16px; border-bottom:1px solid #e6e6e6; z-index:10; }
+    .title { font-size:18px; font-weight:700; }
+    .sub { font-size:12px; color:#666; margin-top:2px; }
+    .wrap { padding:14px 14px 82px; }
 
-    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:12px; }
-    input, textarea, select { width:100%; padding:10px; border-radius:12px; border:1px solid #d7d7d7; font-size:16px; box-sizing:border-box; background:#fff; }
-    button { padding:10px 14px; border-radius:12px; border:1px solid #333; background:var(--btn); color:var(--btnText); font-size:16px; }
-    button.alt { background:var(--btnAltBg); color:var(--btnAltText); border-color:#bbb; }
-    button:disabled { opacity:.6; }
+    .card { background:#fff; border:1px solid #e6e6e6; border-radius:16px; padding:14px; margin-bottom:12px; }
+    input, textarea, select { width:100%; padding:10px; border-radius:12px; border:1px solid #d7d7d7; font-size:16px; box-sizing:border-box; }
+    button { padding:10px 14px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-size:16px; cursor:pointer; }
+    button.alt { background:#fff; color:#111; border-color:#bbb; }
+    button:disabled { opacity:.6; cursor:default; }
 
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .small { color:var(--muted); font-size:13px; }
-    .pill { display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid #ddd; font-size:12px; color:#444; background:#fafafa; }
+    .small { color:#666; font-size:13px; }
+    .hidden { display:none !important; }
 
-    .rememberRow{ display:flex; align-items:center; gap:10px; width:100%; }
+    .rememberRow{
+      display:flex; align-items:center; gap:10px; width:100%;
+    }
     .rememberRow input{ width:20px; height:20px; flex:0 0 auto; }
     .rememberRow span{ flex:1 1 auto; white-space:normal; word-break:break-word; }
 
-    .nav { position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--border); display:flex; }
-    .nav button { flex:1; border:none; border-radius:0; background:var(--card); color:var(--text); padding:12px 6px; font-size:13px; }
-    .nav button.active { font-weight:800; }
+    .nav { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid #e6e6e6; display:flex; }
+    .nav button { flex:1; border:none; border-radius:0; background:#fff; color:#111; padding:12px 6px; font-size:13px; }
+    .nav button.active { font-weight:700; }
 
-    .hidden { display:none !important; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid #ddd; font-size:12px; color:#444; background:#fafafa; }
 
     /* Tiles */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap:12px;
-      margin-top:10px;
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:12px; margin-top:12px; }
+    .tile { border:1px solid #e6e6e6; border-radius:16px; overflow:hidden; background:#fff; cursor:pointer; }
+    .cover { width:100%; aspect-ratio: 3/4; background:#eef0f3; display:flex; align-items:center; justify-content:center; color:#666; font-size:13px; }
+    .cover img { width:100%; height:100%; object-fit:cover; display:block; }
+    .tileBody { padding:10px; }
+    .tTitle { font-weight:700; font-size:14px; line-height:1.2; }
+    .tMeta { font-size:12px; color:#666; margin-top:6px; }
+
+    /* Modal (Detalhes) */
+    #detailModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); padding:14px; z-index:40; }
+    #detailBox {
+      background:#fff; border-radius:16px; max-width:820px; margin:0 auto;
+      max-height:90vh; overflow:auto; /* <-- SCROLL */
+      padding:12px;
     }
-    @media (min-width:720px){
-      .grid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
-    }
-    .tile{
-      border:1px solid var(--border);
-      border-radius:16px;
-      overflow:hidden;
-      background:#fff;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      min-height:220px;
-      box-shadow:0 1px 0 rgba(0,0,0,.03);
-    }
-    .tile .cover{
-      height:150px;
-      background:#f0f1f3;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#777;
-      font-weight:700;
-      position:relative;
-    }
-    .tile .cover img{
-      position:absolute; inset:0;
-      width:100%; height:100%;
-      object-fit:cover;
-    }
-    .tile .meta{ padding:10px; }
-    .tile .t{ font-weight:800; font-size:14px; line-height:1.2; }
-    .tile .a{ font-size:12px; color:var(--muted); margin-top:4px; }
-    .tile .p{ font-size:12px; color:var(--muted); margin-top:6px; }
 
     /* Scanner modal */
     #scannerModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); padding:14px; z-index:30; }
@@ -104,32 +68,6 @@
     /* Manual modal */
     #manualModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); padding:14px; z-index:25; }
     #manualBox { background:#fff; border-radius:16px; padding:12px; max-width:720px; margin:0 auto; }
-
-    /* Details modal (scroll FIX) */
-    #detailModal{
-      display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
-      padding:14px; z-index:40;
-    }
-    #detailBox{
-      background:#fff; border-radius:16px; max-width:840px; margin:0 auto;
-      display:flex; flex-direction:column;
-      max-height: calc(100vh - 28px);
-    }
-    #detailHeader{
-      padding:12px; border-bottom:1px solid #eee;
-      display:flex; justify-content:space-between; align-items:center; gap:10px;
-      flex:0 0 auto;
-    }
-    #detailBody{
-      padding:12px;
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
-      flex:1 1 auto;
-    }
-    .twoCol{ display:grid; grid-template-columns:1fr; gap:10px; }
-    @media(min-width:720px){ .twoCol{ grid-template-columns:1fr 1fr; } }
-    .field{ margin-bottom:10px; }
-    .field label{ display:block; font-weight:700; margin-bottom:6px; }
   </style>
 </head>
 
@@ -155,13 +93,19 @@
 
       <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
 
-      <!-- ✅ Fallback aparece IMEDIATAMENTE (nunca fica sem botão) -->
-      <div class="row" style="margin-top:8px;">
-        <button id="fallbackLogin" class="alt" onclick="loginFallback()">Entrar com Google</button>
-        <button id="btnReloadLogin" class="alt" onclick="reloadLogin()">Recarregar login</button>
-      </div>
+      <button id="fallbackLogin" class="alt" style="display:none; margin-top:8px;" onclick="loginFallback()">
+        Entrar com Google
+      </button>
 
-      <div id="diag" class="small" style="margin-top:8px;"></div>
+      <div class="small" style="margin-top:10px;"><b>Ou entrar com Email + PIN</b></div>
+      <div class="row" style="margin-top:8px;">
+        <input id="pinEmail" placeholder="email@exemplo.com" style="flex:2; min-width:220px;">
+        <input id="pinCode" placeholder="PIN" style="flex:1; min-width:120px;" autocomplete="off">
+        <button class="alt" onclick="loginPin()">Entrar</button>
+      </div>
+      <div class="small" id="pinMsg" style="margin-top:6px;"></div>
+
+      <div id="diag" class="small" style="margin-top:10px;"></div>
 
       <div class="small" style="margin-top:8px;">
         <label class="rememberRow">
@@ -207,7 +151,7 @@
           <b>Últimos cadastrados</b>
           <button class="alt" onclick="carregarRecentes()">Atualizar</button>
         </div>
-        <div id="recentes" style="margin-top:10px;"></div>
+        <div id="recentes" class="grid"></div>
       </div>
     </section>
 
@@ -219,24 +163,15 @@
 
         <div class="row" style="margin-top:10px;">
           <input id="q" placeholder="Buscar...">
-          <button class="alt" onclick="buscar()">Buscar</button>
+          <button class="alt" onclick="buscar(true)">Buscar</button>
         </div>
 
         <div class="small" id="resumo" style="margin-top:10px;"></div>
-
-        <div id="grid" class="grid"></div>
+        <div id="acervo" class="grid"></div>
 
         <div class="row" style="margin-top:10px;">
           <button class="alt" onclick="prev()">◀</button>
           <button class="alt" onclick="next()">▶</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <b>Estatísticas</b>
-        <div class="small" id="statsTxt" style="margin-top:8px;">—</div>
-        <div class="row" style="margin-top:10px;">
-          <button class="alt" onclick="loadStats()">Atualizar stats</button>
         </div>
       </div>
     </section>
@@ -275,6 +210,10 @@
         <label><b>Nome</b> <span class="small">(opcional)</span></label>
         <input id="u_name" placeholder="Opcional">
 
+        <div style="height:10px"></div>
+        <label><b>PIN</b> <span class="small">(opcional – deixe vazio para não alterar)</span></label>
+        <input id="u_pin" placeholder="Ex.: 1234 (ou PIN forte)" autocomplete="off">
+
         <div class="row" style="margin-top:10px;">
           <button id="btnUserSave" onclick="saveUser()">Salvar usuário</button>
           <button class="alt" onclick="loadUsers()">Recarregar</button>
@@ -283,7 +222,7 @@
 
       <div class="card" id="usersListCard">
         <b>Lista</b>
-        <div id="usersList" style="margin-top:10px;"></div>
+        <div id="usersList" class="list"></div>
       </div>
     </section>
 
@@ -334,12 +273,12 @@
       <input id="m_edition" placeholder="Opcional">
 
       <div style="height:10px"></div>
-      <div class="twoCol">
-        <div>
+      <div class="row">
+        <div style="flex:1">
           <label><b>Ano</b></label>
           <input id="m_year" inputmode="numeric" placeholder="Opcional">
         </div>
-        <div>
+        <div style="flex:1">
           <label><b>Idioma</b></label>
           <input id="m_language" placeholder="pt-BR">
         </div>
@@ -361,6 +300,10 @@
       <label><b>Observações</b></label>
       <textarea id="m_notes" rows="2"></textarea>
 
+      <div style="height:10px"></div>
+      <label><b>Capa (URL)</b> <span class="small">(opcional)</span></label>
+      <input id="m_coverUrl" placeholder="Opcional">
+
       <div class="row" style="margin-top:10px;">
         <button id="btnManual" onclick="cadastrarManual()">Salvar manual</button>
         <span class="small" id="statusManual"></span>
@@ -368,747 +311,83 @@
     </div>
   </div>
 
-  <!-- Details modal -->
+  <!-- Detalhes modal -->
   <div id="detailModal">
     <div id="detailBox">
-      <div id="detailHeader">
+      <div class="row" style="justify-content:space-between; align-items:center;">
         <b>Detalhes do livro</b>
-        <div class="row">
-          <button class="alt" onclick="closeDetails()">Fechar</button>
-          <button id="btnSaveDetails" onclick="saveDetails()">Salvar</button>
-        </div>
+        <button class="alt" onclick="closeDetail()">Fechar</button>
       </div>
-      <div id="detailBody">
-        <div class="small" id="detailHint" style="margin-bottom:10px;">—</div>
 
-        <div class="field">
-          <label>ID</label>
-          <input id="d_ID" disabled>
-        </div>
-
-        <div class="field">
-          <label>ISBN <span class="small" id="lockISBN"></span></label>
-          <input id="d_ISBN">
-        </div>
-
-        <div class="field">
-          <label>Título</label>
-          <input id="d_Titulo">
-        </div>
-
-        <div class="field">
-          <label>Autor(es)</label>
-          <input id="d_Autores">
-        </div>
-
-        <div class="twoCol">
-          <div class="field">
-            <label>Editora</label>
-            <input id="d_Editora">
+      <div class="row" style="margin-top:10px;">
+        <div style="width:140px">
+          <div class="cover" style="border-radius:12px; overflow:hidden;">
+            <img id="d_coverImg" alt="capa" style="display:none;">
+            <span id="d_coverPh">Sem capa</span>
           </div>
-          <div class="field">
-            <label>Edição</label>
-            <input id="d_Edicao">
+          <input id="d_coverFile" type="file" accept="image/*" capture="environment" class="hidden">
+          <button id="btnCover" class="alt" style="margin-top:10px; width:100%;" onclick="pickCover()">📷 Enviar capa</button>
+          <div class="small" id="d_coverMsg" style="margin-top:6px;"></div>
+        </div>
+
+        <div style="flex:1; min-width:240px;">
+          <label><b>ID</b></label>
+          <input id="d_id" disabled>
+
+          <div style="height:10px"></div>
+          <label><b>ISBN</b> <span class="small">(travado)</span></label>
+          <input id="d_isbn" disabled>
+
+          <div style="height:10px"></div>
+          <label><b>Título</b></label>
+          <input id="d_title">
+
+          <div style="height:10px"></div>
+          <label><b>Autor(es)</b></label>
+          <input id="d_authors">
+
+          <div style="height:10px"></div>
+          <div class="row">
+            <div style="flex:1">
+              <label><b>Editora</b></label>
+              <input id="d_publisher">
+            </div>
+            <div style="flex:1">
+              <label><b>Edição</b></label>
+              <input id="d_edition">
+            </div>
           </div>
-        </div>
 
-        <div class="twoCol">
-          <div class="field">
-            <label>Ano</label>
-            <input id="d_Ano">
+          <div style="height:10px"></div>
+          <div class="row">
+            <div style="flex:1">
+              <label><b>Ano</b></label>
+              <input id="d_year">
+            </div>
+            <div style="flex:1">
+              <label><b>Idioma</b></label>
+              <input id="d_language">
+            </div>
           </div>
-          <div class="field">
-            <label>Idioma</label>
-            <input id="d_Idioma">
+
+          <div style="height:10px"></div>
+          <div class="row">
+            <div style="flex:1">
+              <label><b>Páginas</b></label>
+              <input id="d_pages">
+            </div>
+            <div style="flex:1">
+              <label><b>Fonte</b> <span class="small">(travado)</span></label>
+              <input id="d_source" disabled>
+            </div>
           </div>
-        </div>
 
-        <div class="twoCol">
-          <div class="field">
-            <label>Páginas</label>
-            <input id="d_Paginas">
-          </div>
-          <div class="field">
-            <label>Fonte <span class="small" id="lockFonte"></span></label>
-            <input id="d_Fonte">
-          </div>
-        </div>
+          <div style="height:10px"></div>
+          <label><b>Link</b></label>
+          <input id="d_link">
 
-        <div class="field">
-          <label>Link</label>
-          <input id="d_Link">
-        </div>
+          <div style="height:10px"></div>
+          <label><b>Localização</b></label>
+          <input id="d_location">
 
-        <div class="field">
-          <label>Capa_URL <span class="small" id="capaRole"></span></label>
-          <input id="d_Capa">
-        </div>
-
-        <div class="field">
-          <label>Localização</label>
-          <input id="d_Localizacao">
-        </div>
-
-        <div class="field">
-          <label>Observações</label>
-          <textarea id="d_Obs" rows="3"></textarea>
-        </div>
-
-        <div class="small" id="detailStatus" style="margin-top:8px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ZXing -->
-  <script type="module">
-    import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
-    window.ZXing = ZXing;
-  </script>
-
-  <script>
-    const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
-    const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
-
-    const COL = {
-      ID:"ID",
-      ISBN:"ISBN",
-      TITULO:"Título",
-      AUTORES:"Autor(es)",
-      EDITORA:"Editora",
-      EDICAO:"Edição",
-      ANO:"Ano",
-      IDIOMA:"Idioma",
-      PAGINAS:"Páginas",
-      FONTE:"Fonte",
-      LINK:"Link",
-      CADASTRADO_EM:"Cadastrado_em",
-      LOCALIZACAO:"Localização",
-      OBS:"Observações",
-      ATUALIZADO_EM:"Atualizado_em",
-      CAPA:"Capa_URL",
-    };
-
-    const STORAGE_KEY = "bib_id_token_v1";
-
-    let ID_TOKEN = "";
-    let ME = null;
-    let OFFSET = 0;
-    const LIMIT = 20;
-    let codeReader = null;
-
-    let CURRENT_DETAIL_ID = "";
-
-    const $ = id => document.getElementById(id);
-
-    function diag(msg){ $("diag").textContent = msg; }
-    function setTop(msg){ $("topStatus").textContent = msg; }
-
-    // ✅ pega erro JS e mostra na tela (ajuda MUITO quando “trava”)
-    window.addEventListener("error", (ev) => {
-      try{
-        setTop("Erro no app (veja abaixo).");
-        diag("Erro: " + (ev?.message || ev));
-      }catch(e){}
-    });
-
-    function saveToken_(token){
-      if (!$("remember").checked) return;
-      try { localStorage.setItem(STORAGE_KEY, token); } catch(e) {}
-    }
-    function loadToken_(){
-      try { return localStorage.getItem(STORAGE_KEY) || ""; } catch(e) { return ""; }
-    }
-    function clearToken_(){
-      try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-    }
-
-    function setLoggedOutUI_(msg){
-      ME = null;
-      ID_TOKEN = "";
-      $("authStatus").textContent = msg || "Faça login para usar.";
-      $("btnLogout").style.display = "none";
-      $("rolePill").textContent = "—";
-      setTop("Não autenticado.");
-      $("navUsers").classList.add("hidden");
-      $("usersAdminCard").classList.add("hidden");
-      $("usersListCard").classList.add("hidden");
-      $("btnCadastrar").disabled = true;
-      $("btnManual").disabled = true;
-    }
-
-    function setLoggedInUI_(email, role){
-      $("authStatus").textContent = "✅ Logado.";
-      $("btnLogout").style.display = "inline-block";
-      $("rolePill").textContent = role;
-      setTop(`Logado: ${email} (${role})`);
-
-      const canEdit = (role === "admin" || role === "editor");
-      $("btnCadastrar").disabled = !canEdit;
-      $("btnManual").disabled = !canEdit;
-
-      if (role === "admin") {
-        $("navUsers").classList.remove("hidden");
-        $("usersAdminCard").classList.remove("hidden");
-        $("usersListCard").classList.remove("hidden");
-      } else {
-        $("navUsers").classList.add("hidden");
-        $("usersAdminCard").classList.add("hidden");
-        $("usersListCard").classList.add("hidden");
-      }
-    }
-
-    function api(action, payload = {}) {
-      return new Promise((resolve, reject) => {
-        const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-
-        window[cb] = (data) => {
-          try { delete window[cb]; } catch(e) {}
-          script.remove();
-          resolve(data);
-        };
-
-        const params = new URLSearchParams();
-        params.set("callback", cb);
-        params.set("action", action);
-        params.set("idToken", ID_TOKEN);
-
-        if (payload.limit != null) params.set("limit", String(payload.limit));
-        if (payload.query != null) params.set("query", String(payload.query));
-        if (payload.offset != null) params.set("offset", String(payload.offset));
-        if (payload.isbn != null) params.set("isbn", String(payload.isbn));
-        if (payload.extras != null) params.set("extras", encodeURIComponent(JSON.stringify(payload.extras)));
-        if (payload.payload != null) params.set("payload", encodeURIComponent(JSON.stringify(payload.payload)));
-        if (payload.user != null) params.set("user", encodeURIComponent(JSON.stringify(payload.user)));
-        if (payload.id != null) params.set("id", String(payload.id));
-
-        const script = document.createElement("script");
-        script.src = API_URL + "?" + params.toString();
-        script.onerror = () => {
-          try { delete window[cb]; } catch(e) {}
-          script.remove();
-          reject(new Error("Falha ao chamar API (JSONP)."));
-        };
-
-        document.body.appendChild(script);
-      });
-    }
-
-    function initLogin() {
-      // ✅ sempre começa mostrando “Não autenticado”
-      setLoggedOutUI_("Faça login para usar.");
-      diag("Preparando login…");
-
-      // tentar token salvo
-      const saved = loadToken_();
-      if (saved) {
-        ID_TOKEN = saved;
-        diag("Token salvo encontrado. Validando…");
-        validateToken_();
-      } else {
-        diag("Sem token salvo. Use o botão 'Entrar com Google'.");
-      }
-
-      // tentar inicializar GSI quando/SE carregar
-      const t0 = Date.now();
-      (function wait(){
-        if (window.__gsiFailed) {
-          diag("Falha ao carregar login do Google. Verifique bloqueadores/privacidade.");
-          return;
-        }
-        if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) {
-          startGsi_();
-          return;
-        }
-        // ✅ não fica travado: após 3s, já avisa que o fallback é o caminho
-        if (Date.now() - t0 > 3000) {
-          diag("Login do Google não carregou a tempo. Use 'Entrar com Google' ou 'Recarregar login'.");
-          return;
-        }
-        setTimeout(wait, 150);
-      })();
-    }
-
-    function startGsi_(){
-      try{
-        diag("Login do Google carregado. Renderizando botão…");
-
-        google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          itp_support: true,
-          auto_select: true,
-          callback: async (resp) => {
-            ID_TOKEN = resp.credential || "";
-            diag("Token recebido. Validando…");
-            await validateToken_();
-          }
-        });
-
-        google.accounts.id.renderButton($("gsiBtn"), {
-          theme: "outline",
-          size: "large",
-          text: "signin_with"
-        });
-
-        // se a lib carregou, o prompt pode ajudar
-        setTimeout(() => { try { google.accounts.id.prompt(); } catch(e) {} }, 350);
-      }catch(e){
-        diag("Erro ao iniciar GSI: " + (e?.message || e));
-      }
-    }
-
-    async function validateToken_(){
-      try{
-        const me = await api("me");
-        if (!me || !me.ok) throw new Error(me?.message || "Sem permissão.");
-
-        ME = { email: me.email, role: me.role };
-        setLoggedInUI_(ME.email, ME.role);
-        saveToken_(ID_TOKEN);
-
-        diag("Sessão ativa.");
-        await carregarRecentes();
-        await buscar(true);
-        await loadStats();
-        $("isbn").focus();
-
-        if (ME.role === "admin") loadUsers();
-      }catch(e){
-        clearToken_();
-        setLoggedOutUI_("Sessão expirada. Faça login novamente.");
-        diag("Sessão expirada. Use 'Entrar com Google'.");
-      }
-    }
-
-    function loginFallback(){
-      try{
-        if (window.google && google.accounts && google.accounts.id) {
-          google.accounts.id.prompt();
-          return;
-        }
-        diag("O script do login do Google não carregou. Tente 'Recarregar login' e verifique bloqueadores.");
-      }catch(e){
-        diag("Falha ao abrir login: " + (e?.message || e));
-      }
-    }
-
-    function reloadLogin(){
-      // recarrega só a página (funciona melhor que tentar “reiniciar” GSI)
-      location.reload();
-    }
-
-    function logout(){
-      clearToken_();
-      try { google.accounts.id.disableAutoSelect(); } catch(e) {}
-      setLoggedOutUI_("Você saiu. Faça login para usar.");
-      diag("Sessão removida deste dispositivo.");
-    }
-
-    function showScreen(name) {
-      $("screenCadastrar").classList.toggle("hidden", name !== "Cadastrar");
-      $("screenAcervo").classList.toggle("hidden", name !== "Acervo");
-      $("screenUsers").classList.toggle("hidden", name !== "Users");
-
-      $("navCadastrar").classList.toggle("active", name === "Cadastrar");
-      $("navAcervo").classList.toggle("active", name === "Acervo");
-      $("navUsers").classList.toggle("active", name === "Users");
-
-      if (name === "Acervo") {
-        const q = $("q").value.trim();
-        if (!q) { OFFSET = 0; carregarPagina(); }
-      }
-
-      if (name === "Users" && ME && ME.role === "admin") loadUsers();
-    }
-
-    // ======= resto do app (iguais ao seu) =======
-    $("isbn").addEventListener("keydown", e => { if (e.key === "Enter") cadastrar(); });
-
-    async function cadastrar() {
-      if (!ID_TOKEN) return setStatusCadastrar_("Faça login antes.");
-      if (!ME || (ME.role !== "admin" && ME.role !== "editor")) return setStatusCadastrar_("Sem permissão para cadastrar.");
-
-      const isbn = $("isbn").value.trim().replace(/\D/g,"");
-      if (!/^\d{13}$/.test(isbn)) return setStatusCadastrar_("ISBN inválido (13 dígitos).");
-
-      setStatusCadastrar_("Buscando…", true);
-
-      const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
-
-      try {
-        const res = await api("cadastrar", { isbn, extras });
-        if (!res || !res.ok) return setStatusCadastrar_(res?.message || "Falhou.");
-
-        const meta = res.meta || {};
-        const hasMeta = !!(meta.title || meta.authors || meta.publisher);
-        if (!hasMeta) {
-          setStatusCadastrar_("⚠️ Não encontrei dados nas fontes. Complete manualmente…");
-          if (res.id) await openDetails(res.id, { force: true, msg: "Complete os dados e clique em Salvar." });
-        } else {
-          setStatusCadastrar_(res.action === "updated" ? "✅ Atualizado." : "✅ Cadastrado.");
-        }
-
-        $("isbn").value = "";
-        await carregarRecentes();
-        await buscar(true);
-        await loadStats();
-      } catch (e) {
-        setStatusCadastrar_("Erro: " + (e?.message || e));
-      } finally {
-        $("btnCadastrar").disabled = !(ME && (ME.role==="admin" || ME.role==="editor"));
-      }
-    }
-
-    function setStatusCadastrar_(msg, loading=false){
-      $("statusCadastrar").textContent = msg || "";
-      $("btnCadastrar").disabled = !!loading || !(ME && (ME.role==="admin"||ME.role==="editor"));
-    }
-
-    async function carregarRecentes() {
-      if (!ID_TOKEN) return;
-      const res = await api("recentes", { limit: 10 });
-      const el = $("recentes");
-      el.innerHTML = "";
-      (res.items || []).forEach(it => {
-        const d = document.createElement("div");
-        d.style.padding = "10px 0";
-        d.style.borderTop = "1px solid #eee";
-        d.innerHTML = `
-          <b>${esc(it.title || "(sem título)")}</b>
-          <div class="small">${esc(it.authors || "")}</div>
-          <div class="small">ID: ${esc(it.id||"")} · ${esc(it.publisher||"")} · ${esc(it.year||"")} · ${esc(it.source||"")}</div>
-        `;
-        el.appendChild(d);
-      });
-    }
-
-    function buscar(resetIfEmpty=false){
-      const q = $("q").value.trim();
-      if (resetIfEmpty && !q) OFFSET = 0;
-      else OFFSET = 0;
-      return carregarPagina();
-    }
-
-    async function carregarPagina(){
-      if (!ID_TOKEN) return;
-      const q = $("q").value.trim();
-      const res = await api("buscar", { query: q, offset: OFFSET, limit: LIMIT });
-
-      $("resumo").textContent = `Total: ${res.total || 0} | Página: ${Math.floor(OFFSET / LIMIT) + 1}`;
-
-      const grid = $("grid");
-      grid.innerHTML = "";
-
-      (res.items || []).forEach(it => {
-        const tile = document.createElement("div");
-        tile.className = "tile";
-
-        const cover = document.createElement("div");
-        cover.className = "cover";
-
-        const capaUrl = it.capaUrl || it.capa || it.cover || "";
-        if (capaUrl) {
-          const img = document.createElement("img");
-          img.src = capaUrl;
-          img.alt = "Capa";
-          img.onerror = () => { cover.textContent = "Sem capa"; };
-          cover.appendChild(img);
-        } else {
-          cover.textContent = "Sem capa";
-        }
-
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        meta.innerHTML = `
-          <div class="t">${esc(it.title || "(sem título)")}</div>
-          <div class="a">${esc(it.authors || "")}</div>
-          <div class="p">${esc(it.publisher || "")}${it.year ? " · " + esc(it.year) : ""}</div>
-        `;
-
-        tile.appendChild(cover);
-        tile.appendChild(meta);
-
-        tile.addEventListener("click", () => openDetails(it.id));
-
-        grid.appendChild(tile);
-      });
-    }
-
-    function next(){ OFFSET += LIMIT; carregarPagina(); }
-    function prev(){ OFFSET = Math.max(0, OFFSET - LIMIT); carregarPagina(); }
-
-    async function loadStats(){
-      try{
-        const r = await api("stats");
-        if (!r || !r.ok) { $("statsTxt").textContent = "Stats indisponíveis (backend ainda não implementou)."; return; }
-        let txt = `Livros: ${r.total || 0}`;
-        if (r.topAuthors && r.topAuthors.length) txt += ` | Top autores: ${r.topAuthors.slice(0,3).map(x=>`${x.name} (${x.count})`).join(", ")}`;
-        if (r.topPublishers && r.topPublishers.length) txt += ` | Top editoras: ${r.topPublishers.slice(0,3).map(x=>`${x.name} (${x.count})`).join(", ")}`;
-        $("statsTxt").textContent = txt;
-      }catch(e){
-        $("statsTxt").textContent = "Stats indisponíveis (backend ainda não implementou).";
-      }
-    }
-
-    function openManual(){
-      if (!ME || (ME.role !== "admin" && ME.role !== "editor")) return setStatusCadastrar_("Sem permissão.");
-      $("manualModal").style.display = "block";
-      $("statusManual").textContent = "";
-    }
-    function closeManual(){ $("manualModal").style.display = "none"; }
-
-    async function cadastrarManual(){
-      if (!ME || (ME.role !== "admin" && ME.role !== "editor")) { $("statusManual").textContent = "Sem permissão."; return; }
-
-      const payload = {
-        title: $("m_title").value.trim(),
-        authors: $("m_authors").value.trim(),
-        publisher: $("m_publisher").value.trim(),
-        edition: $("m_edition").value.trim(),
-        year: $("m_year").value.trim(),
-        language: $("m_language").value.trim(),
-        pages: $("m_pages").value.trim(),
-        link: $("m_link").value.trim(),
-        location: $("m_location").value.trim(),
-        notes: $("m_notes").value.trim(),
-      };
-      if (!payload.title) { $("statusManual").textContent = "Título é obrigatório."; return; }
-
-      $("btnManual").disabled = true;
-      $("statusManual").textContent = "Salvando…";
-
-      try {
-        const res = await api("cadastrar_manual", { payload });
-        if (!res || !res.ok) { $("statusManual").textContent = res?.message || "Falhou."; return; }
-
-        $("statusManual").textContent = "✅ Cadastrado.";
-        closeManual();
-        await carregarRecentes();
-        await buscar(true);
-        await loadStats();
-      } catch(e) {
-        $("statusManual").textContent = "Erro: " + (e?.message || e);
-      } finally {
-        $("btnManual").disabled = false;
-      }
-    }
-
-    async function abrirScanner() {
-      if (!ME || (ME.role !== "admin" && ME.role !== "editor")) return setStatusCadastrar_("Sem permissão.");
-      $("scannerModal").style.display = "block";
-      $("scanStatus").textContent = "Abrindo câmera…";
-
-      if (!window.ZXing) { $("scanStatus").textContent = "Scanner não carregou. Recarregue a página."; return; }
-
-      try {
-        codeReader = new window.ZXing.BrowserMultiFormatReader();
-        const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
-        const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
-
-        await codeReader.decodeFromVideoDevice(backCam?.deviceId, $("video"), (result) => {
-          if (result) {
-            const raw = result.getText().replace(/\D/g, "");
-            if (raw.length !== 13) return;
-            $("isbn").value = raw;
-            $("scanStatus").textContent = "✅ Detectado";
-            fecharScanner();
-            $("isbn").focus();
-          }
-        });
-
-        $("scanStatus").textContent = "Aponte para o código…";
-      } catch (e) {
-        $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
-      }
-    }
-
-    function fecharScanner() {
-      $("scannerModal").style.display = "none";
-      try { codeReader && codeReader.reset(); } catch(e){}
-      codeReader = null;
-    }
-
-    async function openDetails(id, opts={}){
-      if (!ID_TOKEN) return;
-      $("detailStatus").textContent = "";
-      $("detailHint").textContent = opts.msg || "Você pode editar e salvar (respeitando suas permissões).";
-      $("detailModal").style.display = "block";
-      CURRENT_DETAIL_ID = id;
-
-      try{
-        const res = await api("item_get", { id });
-        if (!res || !res.ok) { $("detailStatus").textContent = res?.message || "Erro."; return; }
-        const it = res.item || {};
-
-        const isAdmin = ME && ME.role === "admin";
-        const isEditor = ME && ME.role === "editor";
-        const canEditAll = isAdmin;
-        const canEditLocObs = isAdmin || isEditor;
-
-        $("d_ISBN").disabled = true;
-        $("d_Fonte").disabled = true;
-        $("lockISBN").textContent = "(travado)";
-        $("lockFonte").textContent = "(travado)";
-
-        $("d_Capa").disabled = !isAdmin;
-        $("capaRole").textContent = isAdmin ? "(admin)" : "(somente admin)";
-
-        const setDis = (el, dis) => { el.disabled = dis; };
-        setDis($("d_Titulo"), !canEditAll);
-        setDis($("d_Autores"), !canEditAll);
-        setDis($("d_Editora"), !canEditAll);
-        setDis($("d_Edicao"), !canEditAll);
-        setDis($("d_Ano"), !canEditAll);
-        setDis($("d_Idioma"), !canEditAll);
-        setDis($("d_Paginas"), !canEditAll);
-        setDis($("d_Link"), !canEditAll);
-
-        setDis($("d_Localizacao"), !canEditLocObs);
-        setDis($("d_Obs"), !canEditLocObs);
-
-        $("d_ID").value = str_(it[COL.ID]);
-        $("d_ISBN").value = str_(it[COL.ISBN]);
-        $("d_Titulo").value = str_(it[COL.TITULO]);
-        $("d_Autores").value = str_(it[COL.AUTORES]);
-        $("d_Editora").value = str_(it[COL.EDITORA]);
-        $("d_Edicao").value = str_(it[COL.EDICAO]);
-        $("d_Ano").value = str_(it[COL.ANO]);
-        $("d_Idioma").value = str_(it[COL.IDIOMA]);
-        $("d_Paginas").value = str_(it[COL.PAGINAS]);
-        $("d_Fonte").value = str_(it[COL.FONTE]);
-        $("d_Link").value = str_(it[COL.LINK]);
-        $("d_Capa").value = str_(it[COL.CAPA]);
-        $("d_Localizacao").value = str_(it[COL.LOCALIZACAO]);
-        $("d_Obs").value = str_(it[COL.OBS]);
-
-        $("btnSaveDetails").disabled = !(canEditAll || canEditLocObs);
-
-        if (opts.force) $("detailBody").scrollTop = 0;
-      }catch(e){
-        $("detailStatus").textContent = "Erro: " + (e?.message || e);
-      }
-    }
-
-    function closeDetails(){
-      $("detailModal").style.display = "none";
-      CURRENT_DETAIL_ID = "";
-    }
-
-    async function saveDetails(){
-      if (!CURRENT_DETAIL_ID) return;
-      if (!ME) return;
-
-      const updates = {};
-      if (ME.role === "admin" || ME.role === "editor"){
-        updates[COL.LOCALIZACAO] = $("d_Localizacao").value.trim();
-        updates[COL.OBS] = $("d_Obs").value.trim();
-      }
-      if (ME.role === "admin"){
-        updates[COL.TITULO] = $("d_Titulo").value.trim();
-        updates[COL.AUTORES] = $("d_Autores").value.trim();
-        updates[COL.EDITORA] = $("d_Editora").value.trim();
-        updates[COL.EDICAO] = $("d_Edicao").value.trim();
-        updates[COL.ANO] = $("d_Ano").value.trim();
-        updates[COL.IDIOMA] = $("d_Idioma").value.trim();
-        updates[COL.PAGINAS] = $("d_Paginas").value.trim();
-        updates[COL.LINK] = $("d_Link").value.trim();
-        updates[COL.CAPA] = $("d_Capa").value.trim();
-      }
-
-      $("detailStatus").textContent = "Salvando…";
-
-      try{
-        const res = await api("item_update", { payload: { id: CURRENT_DETAIL_ID, updates } });
-        if (!res || !res.ok) { $("detailStatus").textContent = res?.message || "Erro."; return; }
-        $("detailStatus").textContent = "✅ Salvo.";
-        await buscar(true);
-        await carregarRecentes();
-        await loadStats();
-      }catch(e){
-        $("detailStatus").textContent = "Erro: " + (e?.message || e);
-      }
-    }
-
-    async function loadUsers() {
-      if (!ME || ME.role !== "admin") {
-        $("usersStatus").textContent = "Sem permissão.";
-        return;
-      }
-      $("usersStatus").textContent = "Carregando…";
-      const res = await api("users_list");
-      if (!res || !res.ok) {
-        $("usersStatus").textContent = res?.message || "Erro.";
-        return;
-      }
-      $("usersStatus").textContent = "OK.";
-
-      const list = $("usersList");
-      list.innerHTML = "";
-
-      (res.users || []).forEach(u => {
-        const item = document.createElement("div");
-        item.style.padding = "10px 0";
-        item.style.borderTop = "1px solid #eee";
-
-        const title = document.createElement("b");
-        title.textContent = u.email || "";
-        item.appendChild(title);
-
-        const meta = document.createElement("div");
-        meta.className = "small";
-        meta.style.marginTop = "6px";
-        meta.textContent = `role: ${u.role || ""} · active: ${u.active ? "TRUE" : "FALSE"} · ${u.name || ""}`;
-        item.appendChild(meta);
-
-        const row = document.createElement("div");
-        row.className = "row";
-        row.style.marginTop = "8px";
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "alt";
-        btn.textContent = "Editar";
-        btn.addEventListener("click", () => fillUser(u));
-
-        row.appendChild(btn);
-        item.appendChild(row);
-
-        list.appendChild(item);
-      });
-    }
-
-    function fillUser(u) {
-      $("u_email").value = (u.email || "");
-      $("u_role").value = (u.role || "viewer");
-      $("u_active").value = (u.active ? "true" : "false");
-      $("u_name").value = (u.name || "");
-      $("usersStatus").textContent = "Carregado para edição.";
-    }
-
-    async function saveUser() {
-      if (!ME || ME.role !== "admin") return;
-
-      const user = {
-        email: $("u_email").value.trim().toLowerCase(),
-        role: $("u_role").value,
-        active: $("u_active").value === "true",
-        name: $("u_name").value.trim()
-      };
-      if (!user.email.includes("@")) { $("usersStatus").textContent = "Email inválido."; return; }
-
-      $("usersStatus").textContent = "Salvando…";
-      const res = await api("users_upsert", { user });
-      if (!res || !res.ok) { $("usersStatus").textContent = res?.message || "Erro."; return; }
-
-      $("usersStatus").textContent = `✅ ${res.action}`;
-      await loadUsers();
-    }
-
-    function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
-    function str_(v){ return (v==null) ? "" : String(v); }
-
-    // BOOT
-    showScreen("Cadastrar");
-    initLogin();
-  </script>
-</body>
-</html>
+          <div style
