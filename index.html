@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Biblioteca - Família Batista</title>
 
+  <!-- Google Identity Services (GSI) -->
   <script>
     window.__gsiLoaded = false;
     window.__gsiFailed = false;
@@ -21,9 +22,9 @@
     .wrap{padding:14px 14px 82px}
     .card{background:#fff;border:1px solid #e6e6e6;border-radius:16px;padding:14px;margin-bottom:12px}
     input,textarea,select{width:100%;padding:10px;border-radius:12px;border:1px solid #d7d7d7;font-size:16px;box-sizing:border-box}
-    button{padding:10px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-size:16px}
+    button{padding:10px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-size:16px;cursor:pointer}
     button.alt{background:#fff;color:#111;border-color:#bbb}
-    button:disabled{opacity:.6}
+    button:disabled{opacity:.6;cursor:not-allowed}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .small{color:#666;font-size:13px}
     .hidden{display:none!important}
@@ -34,6 +35,7 @@
 
     .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #ddd;font-size:12px;color:#444;background:#fafafa}
 
+    /* Tiles */
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:12px}
     .tile{background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
     .cover{width:100%;height:190px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666}
@@ -42,16 +44,19 @@
     .tileTitle{font-weight:700;font-size:13px;line-height:1.2}
     .tileMeta{margin-top:6px;font-size:12px;color:#666;line-height:1.2}
 
+    /* Modal item (com rolagem interna) */
     #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);padding:14px;z-index:50}
     #modalBox{background:#fff;border-radius:16px;max-width:720px;margin:0 auto;max-height:88vh;overflow:auto;padding:14px}
     #modalHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px;z-index:5}
     #modalHeader b{font-size:16px}
     .field{margin-top:10px}
 
+    /* scanner modal */
     #scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);padding:14px;z-index:60}
     #scannerBox{background:#fff;border-radius:16px;padding:12px;max-width:720px;margin:0 auto}
     #video{width:100%;border-radius:14px;border:1px solid #ddd;background:#000}
 
+    /* remember row */
     .rememberRow{display:flex;align-items:center;gap:10px;width:100%}
     .rememberRow input{width:20px;height:20px;flex:0 0 auto}
     .rememberRow span{flex:1 1 auto;white-space:normal;word-break:break-word}
@@ -65,6 +70,8 @@
   </div>
 
   <div class="wrap">
+
+    <!-- Acesso -->
     <div class="card">
       <div class="row" style="justify-content:space-between; align-items:flex-start;">
         <div>
@@ -99,13 +106,14 @@
       <div id="diag" class="small" style="margin-top:8px;"></div>
     </div>
 
+    <!-- ======= TELA: CADASTRAR ======= -->
     <section id="screenCadastrar">
       <div class="card">
         <div class="row" style="justify-content:space-between;">
           <b>Cadastrar</b>
           <span class="pill" id="rolePill">—</span>
         </div>
-        <div class="small">Por ISBN (digitando ou scanner) ou manual (sem ISBN).</div>
+        <div class="small">Por ISBN (digitando ou scanner).</div>
       </div>
 
       <div class="card">
@@ -129,6 +137,7 @@
       </div>
     </section>
 
+    <!-- ======= TELA: ACERVO ======= -->
     <section id="screenAcervo" class="hidden">
       <div class="card">
         <b>Acervo</b>
@@ -148,13 +157,16 @@
         </div>
       </div>
     </section>
+
   </div>
 
+  <!-- Bottom Nav -->
   <div class="nav">
     <button id="navCadastrar" class="active" onclick="showScreen('Cadastrar')">Cadastrar</button>
     <button id="navAcervo" onclick="showScreen('Acervo')">Acervo</button>
   </div>
 
+  <!-- Scanner modal -->
   <div id="scannerModal">
     <div id="scannerBox">
       <div class="row" style="justify-content:space-between;">
@@ -167,6 +179,7 @@
     </div>
   </div>
 
+  <!-- Modal Item -->
   <div id="modal">
     <div id="modalBox">
       <div id="modalHeader">
@@ -202,21 +215,36 @@
     </div>
   </div>
 
-  <!-- ZXing fallback -->
+  <!-- ZXing (UMA ÚNICA VEZ) -->
   <script type="module">
     import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
     window.ZXing = ZXing;
   </script>
 
   <script>
+    // ✅ seu client id
     const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
+
+    // ✅ sua URL /exec (Apps Script)
     const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
 
+    // cache-buster automático (evita Safari/Chrome “ressuscitar html velho”)
+    (function(){
+      const u = new URL(location.href);
+      if (!u.searchParams.get("v")) {
+        if (!sessionStorage.getItem("bib_v_once")) {
+          sessionStorage.setItem("bib_v_once","1");
+          u.searchParams.set("v", Date.now().toString());
+          location.replace(u.toString());
+        }
+      }
+    })();
+
     const STORAGE_KEY = "bib_session_v3";
+
     let ID_TOKEN = "";
     let PIN_SESSION = "";
-    let ME = null;
-
+    let ME = null; // {email, role}
     let OFFSET = 0;
     const LIMIT = 30;
 
@@ -237,7 +265,9 @@
     }
 
     function setLoggedOutUI_(msg){
-      ME = null; ID_TOKEN = ""; PIN_SESSION = "";
+      ME = null;
+      ID_TOKEN = "";
+      PIN_SESSION = "";
       $("authStatus").textContent = msg || "Faça login para usar.";
       $("btnLogout").style.display = "none";
       $("rolePill").textContent = "—";
@@ -250,15 +280,20 @@
       $("btnLogout").style.display = "inline-block";
       $("rolePill").textContent = role;
       setTop(`Logado: ${email} (${role})`);
-      $("btnCadastrar").disabled = !(role === "admin" || role === "editor");
+
+      const canEdit = (role === "admin" || role === "editor");
+      $("btnCadastrar").disabled = !canEdit;
     }
 
+    // JSONP helper
     function api(action, payload = {}) {
       return new Promise((resolve, reject) => {
         const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        let script;
+
         window[cb] = (data) => {
           try { delete window[cb]; } catch(e) {}
-          script.remove();
+          if (script) script.remove();
           resolve(data);
         };
 
@@ -275,11 +310,11 @@
           else params.set(k, String(v));
         });
 
-        const script = document.createElement("script");
+        script = document.createElement("script");
         script.src = API_URL + "?" + params.toString();
         script.onerror = () => {
           try { delete window[cb]; } catch(e) {}
-          script.remove();
+          if (script) script.remove();
           reject(new Error("Falha ao chamar API (JSONP)."));
         };
         document.body.appendChild(script);
@@ -295,6 +330,7 @@
       await carregarPagina();
     }
 
+    // ===== Login Google robusto =====
     function initGoogleLogin(){
       const showFallback = (msg) => {
         $("fallbackLogin").style.display = "inline-block";
@@ -309,12 +345,19 @@
             auto_select: false,
             callback: async (resp) => {
               ID_TOKEN = resp.credential || "";
-              try { await validateSession_(); }
-              catch (e) { showFallback("Falha ao validar acesso: " + (e?.message || e)); }
+              try {
+                await validateSession_();
+              } catch (e) {
+                showFallback("Falha ao validar acesso: " + (e?.message || e));
+              }
             }
           });
 
-          google.accounts.id.renderButton($("gsiBtn"), { theme: "outline", size: "large", text: "signin_with" });
+          google.accounts.id.renderButton($("gsiBtn"), {
+            theme: "outline",
+            size: "large",
+            text: "signin_with"
+          });
 
           setTimeout(() => {
             const empty = !$("gsiBtn").innerHTML || $("gsiBtn").innerHTML.trim() === "";
@@ -340,17 +383,20 @@
       catch { diag("Falha ao abrir login do Google."); }
     }
 
+    // ===== Login PIN =====
     async function loginPin(){
       const email = $("pin_email").value.trim().toLowerCase();
       const pin   = $("pin_code").value.trim();
       if (!email.includes("@")) return diag("Email inválido.");
       if (!pin) return diag("Informe o PIN.");
 
+      diag("Autenticando PIN...");
       const res = await api("pin_login", { email, pin });
       if (!res || !res.ok) return diag(res?.message || "Falha.");
 
       PIN_SESSION = res.session;
       ID_TOKEN = "";
+      diag("PIN OK.");
       await validateSession_();
     }
 
@@ -358,16 +404,20 @@
       clearSession_();
       try { google.accounts.id.disableAutoSelect(); } catch(e) {}
       setLoggedOutUI_("Você saiu. Faça login para usar.");
+      diag("Sessão removida deste dispositivo.");
       showScreen("Cadastrar");
     }
 
+    // ===== Navegação =====
     function showScreen(name){
       $("screenCadastrar").classList.toggle("hidden", name !== "Cadastrar");
       $("screenAcervo").classList.toggle("hidden", name !== "Acervo");
+
       $("navCadastrar").classList.toggle("active", name === "Cadastrar");
       $("navAcervo").classList.toggle("active", name === "Acervo");
     }
 
+    // ===== Cadastro ISBN + confirmação "já cadastrado" =====
     async function cadastrar(){
       if (!ME) return setStatusCadastrar_("Faça login.");
       if (!(ME.role === "admin" || ME.role === "editor")) return setStatusCadastrar_("Sem permissão.");
@@ -376,6 +426,7 @@
       if (!/^\d{13}$/.test(isbn)) return setStatusCadastrar_("ISBN inválido (13 dígitos).");
 
       setStatusCadastrar_("Processando...", true);
+
       const extras = { location: $("location").value.trim(), notes: $("notes").value.trim() };
 
       try{
@@ -404,10 +455,12 @@
       $("btnCadastrar").disabled = !!loading || !(ME && (ME.role==="admin"||ME.role==="editor"));
     }
 
+    // ===== Acervo (Tiles + clique abre modal) =====
     function buscar(){ OFFSET = 0; return carregarPagina(); }
 
     async function carregarPagina(){
       if (!ME) return;
+
       const q = $("q") ? $("q").value.trim() : "";
       const res = await api("buscar", { query: q, offset: OFFSET, limit: LIMIT });
 
@@ -429,7 +482,7 @@
           const img = document.createElement("img");
           img.src = it.cover;
           img.alt = "capa";
-          img.onerror = () => { cover.innerHTML = "Sem capa"; };
+          img.onerror = () => { cover.textContent = "Sem capa"; };
           cover.appendChild(img);
         } else {
           cover.textContent = "Sem capa";
@@ -452,6 +505,7 @@
     function next(){ OFFSET += LIMIT; carregarPagina(); }
     function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
 
+    // ===== Modal item =====
     let CURRENT_ITEM = null;
 
     async function openItem(id){
@@ -500,6 +554,25 @@
       $("m_cover").value = it["Capa_URL"] || "";
       $("m_location").value = it["Localização"] || "";
       $("m_notes").value = it["Observações"] || "";
+
+      // permissões simples
+      const role = ME?.role || "viewer";
+      const setRO = (id, ro)=>{ $(id).disabled = ro; };
+
+      if (role === "viewer") {
+        ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,true));
+        $("btnSaveItem").disabled = true;
+        $("btnSaveItem").textContent = "Sem permissão";
+      } else if (role === "editor") {
+        ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link"].forEach(x=>setRO(x,true));
+        ["m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
+        $("btnSaveItem").disabled = false;
+        $("btnSaveItem").textContent = "Salvar alterações";
+      } else {
+        ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
+        $("btnSaveItem").disabled = false;
+        $("btnSaveItem").textContent = "Salvar alterações";
+      }
     }
 
     async function saveItem(){
@@ -533,86 +606,99 @@
     }
 
     // =========================
-    // SCANNER multiplataforma (SEM decodeFromVideoElementContinuously)
+    // SCANNER ISBN (câmera) — versão correta p/ @zxing/browser
     // =========================
-    let __scanStream = null;
-    let __scanTimer = null;
-    let __zxingReader = null;
-
-    async function stopStream_(){
-      try {
-        if (__scanTimer) { clearInterval(__scanTimer); __scanTimer = null; }
-        if (__zxingReader) { try { __zxingReader.reset(); } catch(e){} __zxingReader = null; }
-        const v = $("video");
-        if (v) { try { v.pause(); } catch(e){} v.srcObject = null; }
-        if (__scanStream) { __scanStream.getTracks().forEach(t=>t.stop()); __scanStream = null; }
-      } catch(e){}
-    }
+    let __codeReader = null;
+    let __scanStopFn = null;
 
     async function abrirScanner(){
-      if (!ME || !(ME.role==="admin" || ME.role==="editor")) return setStatusCadastrar_("Sem permissão.");
+      if (!ME || !(ME.role === "admin" || ME.role === "editor")) return setStatusCadastrar_("Sem permissão.");
 
       $("scannerModal").style.display = "block";
       $("scanStatus").textContent = "Abrindo câmera…";
 
       try {
-        await stopStream_();
+        if (!window.ZXing || !window.ZXing.BrowserMultiFormatReader) {
+          $("scanStatus").textContent = "Scanner não carregou. Recarregue a página.";
+          return;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          $("scanStatus").textContent = "Seu navegador não suporta câmera (mediaDevices).";
+          return;
+        }
 
-        __scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-        const v = $("video");
-        v.srcObject = __scanStream;
-        await v.play();
+        const videoEl = $("video");
+        if (!videoEl) {
+          $("scanStatus").textContent = "Elemento de vídeo não encontrado (#video).";
+          return;
+        }
 
-        // 1) BarcodeDetector (Chrome/Edge/Android/Windows)
-        if ("BarcodeDetector" in window) {
-          const detector = new BarcodeDetector({ formats: ["ean_13","ean_8","upc_a","upc_e"] });
-          $("scanStatus").textContent = "Aponte para o código…";
-          __scanTimer = setInterval(async ()=>{
-            const codes = await detector.detect(v);
-            if (codes && codes.length) {
-              const raw = String(codes[0].rawValue || "").replace(/\D/g,"");
+        // limpa qualquer sessão anterior
+        fecharScanner(true);
+
+        __codeReader = new window.ZXing.BrowserMultiFormatReader();
+
+        // tenta escolher câmera traseira quando existir
+        let deviceId = null;
+        try {
+          const devices = await window.ZXing.BrowserCodeReader.listVideoInputDevices();
+          const back = devices.find(d => /back|rear|trase|environment/i.test(d.label || "")) || devices[0];
+          deviceId = back ? back.deviceId : null;
+        } catch (e) {
+          deviceId = null; // fallback
+        }
+
+        $("scanStatus").textContent = "Aponte para o código de barras (EAN-13)…";
+
+        const controls = await __codeReader.decodeFromVideoDevice(
+          deviceId,
+          videoEl,
+          (result, err) => {
+            if (result) {
+              const raw = String(result.getText() || "").replace(/\D/g, "");
               if (raw.length === 13) {
                 $("isbn").value = raw;
-                $("scanStatus").textContent = "✅ Detectado";
+                $("scanStatus").textContent = "✅ Detectado: " + raw;
                 fecharScanner();
                 $("isbn").focus();
               }
             }
-          }, 200);
-          return;
-        }
-
-        // 2) ZXing fallback (Safari/iOS/macOS, etc.)
-        if (!window.ZXing || !window.ZXing.BrowserMultiFormatReader) {
-          $("scanStatus").textContent = "Scanner ZXing não carregou. Recarregue a página.";
-          return;
-        }
-
-        __zxingReader = new window.ZXing.BrowserMultiFormatReader();
-        $("scanStatus").textContent = "Aponte para o código…";
-
-        // ✅ API estável do @zxing/browser: decodeFromVideoDevice(deviceId, video, callback)
-        // deviceId undefined => usa câmera padrão sem precisar listVideoInputDevices()
-        await __zxingReader.decodeFromVideoDevice(undefined, v, (result, err) => {
-          if (result) {
-            const raw = String(result.getText() || "").replace(/\D/g,"");
-            if (raw.length === 13) {
-              $("isbn").value = raw;
-              $("scanStatus").textContent = "✅ Detectado";
-              fecharScanner();
-              $("isbn").focus();
-            }
+            // err é normal enquanto procura (NotFoundException). Não exibir spam.
           }
-        });
+        );
+
+        if (controls && typeof controls.stop === "function") {
+          __scanStopFn = () => { try { controls.stop(); } catch(e){} };
+        } else {
+          __scanStopFn = null;
+        }
+
+        try { await videoEl.play(); } catch(e){}
 
       } catch (e) {
         $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
       }
     }
 
-    async function fecharScanner(){
-      $("scannerModal").style.display = "none";
-      await stopStream_();
+    function fecharScanner(silent){
+      if (!silent) $("scannerModal").style.display = "none";
+
+      try { __scanStopFn && __scanStopFn(); } catch(e){}
+      __scanStopFn = null;
+
+      try { __codeReader && __codeReader.reset && __codeReader.reset(); } catch(e){}
+      __codeReader = null;
+
+      try {
+        const videoEl = $("video");
+        if (videoEl && videoEl.srcObject) {
+          const tracks = videoEl.srcObject.getTracks ? videoEl.srcObject.getTracks() : [];
+          tracks.forEach(t => { try { t.stop(); } catch(e){} });
+          videoEl.srcObject = null;
+        }
+      } catch(e){}
+
+      if (!silent) $("scanStatus").textContent = "";
     }
 
     // ===== Escape =====
@@ -629,11 +715,15 @@
         ID_TOKEN = saved.idToken || "";
         PIN_SESSION = saved.session || "";
         if (ID_TOKEN || PIN_SESSION) {
-          try { await validateSession_(); }
-          catch(e) {
+          diag("Sessão salva encontrada. Validando…");
+          try {
+            await validateSession_();
+            diag("Sessão ativa.");
+          } catch(e) {
             clearSession_();
             setLoggedOutUI_("Sessão expirada. Faça login novamente.");
             $("fallbackLogin").style.display = "inline-block";
+            diag("Sessão expirada.");
           }
         } else {
           setTop("Não autenticado.");
