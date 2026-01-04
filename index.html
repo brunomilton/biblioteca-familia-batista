@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Biblioteca - Família Batista</title>
 
+  <!-- Google Identity Services -->
   <script>
     window.__gsiLoaded = false;
     window.__gsiFailed = false;
@@ -23,6 +24,7 @@
     input,textarea,select{width:100%;padding:10px;border-radius:12px;border:1px solid #d7d7d7;font-size:16px;box-sizing:border-box}
     button{padding:10px 14px;border-radius:12px;border:1px solid #333;background:#111;color:#fff;font-size:16px}
     button.alt{background:#fff;color:#111;border-color:#bbb}
+    button.danger{background:#b00020;border-color:#b00020}
     button:disabled{opacity:.6}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .small{color:#666;font-size:13px}
@@ -34,6 +36,7 @@
 
     .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #ddd;font-size:12px;color:#444;background:#fafafa}
 
+    /* Tiles */
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:12px}
     .tile{background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
     .cover{width:100%;height:190px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666}
@@ -42,15 +45,17 @@
     .tileTitle{font-weight:700;font-size:13px;line-height:1.2}
     .tileMeta{margin-top:6px;font-size:12px;color:#666;line-height:1.2}
 
+    /* Modal item (com rolagem interna) */
     #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);padding:14px;z-index:50}
     #modalBox{background:#fff;border-radius:16px;max-width:720px;margin:0 auto;max-height:88vh;overflow:auto;padding:14px}
     #modalHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding-bottom:10px;z-index:5}
     #modalHeader b{font-size:16px}
     .field{margin-top:10px}
 
+    /* scanner modal */
     #scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);padding:14px;z-index:60}
     #scannerBox{background:#fff;border-radius:16px;padding:12px;max-width:720px;margin:0 auto}
-    #video{width:100%;border-radius:14px;border:1px solid #ddd}
+    #video{width:100%;border-radius:14px;border:1px solid #ddd;background:#000}
 
     .rememberRow{display:flex;align-items:center;gap:10px;width:100%}
     .rememberRow input{width:20px;height:20px;flex:0 0 auto}
@@ -66,6 +71,7 @@
 
   <div class="wrap">
 
+    <!-- Acesso -->
     <div class="card">
       <div class="row" style="justify-content:space-between; align-items:flex-start;">
         <div>
@@ -79,7 +85,10 @@
 
       <div id="gsiBtn" style="margin-top:8px; min-height:44px;"></div>
 
-      <button id="fallbackLogin" class="alt" style="display:none; margin-top:8px;" onclick="loginFallback()">
+      <button id="fallbackLogin"
+              class="alt"
+              style="display:none; margin-top:8px;"
+              onclick="loginFallback()">
         Entrar com Google
       </button>
 
@@ -100,6 +109,7 @@
       <div id="diag" class="small" style="margin-top:8px;"></div>
     </div>
 
+    <!-- ======= TELA: CADASTRAR ======= -->
     <section id="screenCadastrar">
       <div class="card">
         <div class="row" style="justify-content:space-between;">
@@ -124,6 +134,7 @@
         <div class="row" style="margin-top:10px;">
           <button id="btnCadastrar" onclick="cadastrar()">Cadastrar</button>
           <button class="alt" onclick="abrirScanner()">📷 Escanear ISBN</button>
+          <button class="alt" onclick="openManual()">✍️ Cadastro manual</button>
         </div>
 
         <div class="small" id="statusCadastrar" style="margin-top:8px;"></div>
@@ -138,6 +149,7 @@
       </div>
     </section>
 
+    <!-- ======= TELA: ACERVO ======= -->
     <section id="screenAcervo" class="hidden">
       <div class="card">
         <b>Acervo</b>
@@ -158,13 +170,7 @@
       </div>
     </section>
 
-    <section id="screenStats" class="hidden">
-      <div class="card">
-        <b>Estatísticas</b>
-        <div class="small" id="statsBox" style="margin-top:10px">—</div>
-      </div>
-    </section>
-
+    <!-- ======= TELA: USUÁRIOS (ADMIN) ======= -->
     <section id="screenUsers" class="hidden">
       <div class="card">
         <b>Usuários</b>
@@ -214,8 +220,17 @@
       </div>
     </section>
 
+    <!-- ======= TELA: STATS ======= -->
+    <section id="screenStats" class="hidden">
+      <div class="card">
+        <b>Estatísticas</b>
+        <div class="small" id="statsBox" style="margin-top:10px">—</div>
+      </div>
+    </section>
+
   </div>
 
+  <!-- Bottom Nav -->
   <div class="nav">
     <button id="navCadastrar" class="active" onclick="showScreen('Cadastrar')">Cadastrar</button>
     <button id="navAcervo" onclick="showScreen('Acervo')">Acervo</button>
@@ -223,6 +238,7 @@
     <button id="navUsers" onclick="showScreen('Users')">Usuários</button>
   </div>
 
+  <!-- Scanner modal -->
   <div id="scannerModal">
     <div id="scannerBox">
       <div class="row" style="justify-content:space-between;">
@@ -235,6 +251,7 @@
     </div>
   </div>
 
+  <!-- Modal Item -->
   <div id="modal">
     <div id="modalBox">
       <div id="modalHeader">
@@ -265,20 +282,23 @@
 
       <div class="row field">
         <button id="btnSaveItem" onclick="saveItem()">Salvar alterações</button>
+        <button id="btnDeleteItem" class="danger hidden" onclick="deleteItem()">Excluir</button>
         <span class="small" id="m_status"></span>
       </div>
     </div>
   </div>
 
+  <!-- ZXing (browser) -->
   <script type="module">
-    import * as ZXing from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
-    window.ZXing = ZXing;
+    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
+    window.__ZXReaderClass = BrowserMultiFormatReader;
   </script>
 
   <script>
     const CLIENT_ID = "633125662554-rjlr69ihdv7g0njfgl9doacnsmdmkcbh.apps.googleusercontent.com";
     const API_URL  = "https://script.google.com/macros/s/AKfycbyMm03BzNNkA5lNbsXBb4CH6cBasRRYO-gtDRkTgUwuULQrjHi1U_YqqBmxwO2AgSAm/exec";
 
+    // cache-buster automático (evita Safari/Chrome “ressuscitar html velho”)
     (function(){
       const u = new URL(location.href);
       if (!u.searchParams.get("v")) {
@@ -291,14 +311,11 @@
     })();
 
     const STORAGE_KEY = "bib_session_v4";
-
     let ID_TOKEN = "";
     let PIN_SESSION = "";
     let ME = null;
     let OFFSET = 0;
     const LIMIT = 30;
-
-    let codeReader = null;
 
     const $ = id => document.getElementById(id);
     function diag(msg){ $("diag").textContent = msg || ""; }
@@ -340,18 +357,17 @@
       const canEdit = (role === "admin" || role === "editor");
       $("btnCadastrar").disabled = !canEdit;
 
-      if (role === "admin") {
-        $("navUsers").classList.remove("hidden");
-      } else {
+      if (role === "admin") $("navUsers").classList.remove("hidden");
+      else {
         $("navUsers").classList.add("hidden");
         $("screenUsers").classList.add("hidden");
       }
     }
 
+    // JSONP helper
     function api(action, payload = {}) {
       return new Promise((resolve, reject) => {
         const cb = "cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-
         window[cb] = (data) => {
           try { delete window[cb]; } catch(e) {}
           script.remove();
@@ -394,6 +410,7 @@
       loadStats();
     }
 
+    // ===== Login Google robusto =====
     function initGoogleLogin(){
       const showFallback = (msg) => {
         $("fallbackLogin").style.display = "inline-block";
@@ -408,6 +425,7 @@
             auto_select: false,
             callback: async (resp) => {
               ID_TOKEN = resp.credential || "";
+              PIN_SESSION = "";
               diag("Token Google recebido.");
               try {
                 await validateSession_();
@@ -437,7 +455,7 @@
       (function wait(){
         if (window.__gsiFailed) { showFallback("Falha ao carregar login do Google."); return; }
         if (window.__gsiLoaded && window.google && google.accounts && google.accounts.id) { start(); return; }
-        if (Date.now() - t0 > 8000) { showFallback("Login do Google não carregou a tempo."); return; }
+        if (Date.now() - t0 > 7000) { showFallback("Login do Google não carregou a tempo."); return; }
         setTimeout(wait, 150);
       })();
     }
@@ -447,6 +465,7 @@
       catch { diag("Falha ao abrir login do Google."); }
     }
 
+    // ===== Login PIN =====
     async function loginPin(){
       const email = $("pin_email").value.trim().toLowerCase();
       const pin   = $("pin_code").value.trim();
@@ -471,6 +490,7 @@
       showScreen("Cadastrar");
     }
 
+    // ===== Navegação =====
     function showScreen(name){
       $("screenCadastrar").classList.toggle("hidden", name !== "Cadastrar");
       $("screenAcervo").classList.toggle("hidden", name !== "Acervo");
@@ -483,8 +503,11 @@
       $("navStats").classList.toggle("active", name === "Stats");
 
       if (name === "Users" && ME && ME.role === "admin") loadUsers();
+      if (name === "Acervo" && ME) carregarPagina();
+      if (name === "Stats" && ME) loadStats();
     }
 
+    // ===== Cadastro ISBN + confirmação "já cadastrado" =====
     async function cadastrar(){
       if (!ME) return setStatusCadastrar_("Faça login.");
       if (!(ME.role === "admin" || ME.role === "editor")) return setStatusCadastrar_("Sem permissão.");
@@ -537,6 +560,7 @@
       });
     }
 
+    // ===== Acervo =====
     function buscar(){ OFFSET = 0; return carregarPagina(); }
 
     async function carregarPagina(){
@@ -557,7 +581,11 @@
         const cover = document.createElement("div");
         cover.className = "cover";
         if (it.cover) {
-          cover.innerHTML = `<img src="${escAttr(it.cover)}" alt="capa" onerror="this.remove(); this.parentNode.textContent='Sem capa';">`;
+          const img = document.createElement("img");
+          img.src = it.cover;
+          img.alt = "capa";
+          img.onerror = () => { cover.innerHTML = ""; cover.textContent = "Sem capa"; };
+          cover.appendChild(img);
         } else {
           cover.textContent = "Sem capa";
         }
@@ -579,6 +607,7 @@
     function next(){ OFFSET += LIMIT; carregarPagina(); }
     function prev(){ OFFSET = Math.max(0, OFFSET-LIMIT); carregarPagina(); }
 
+    // ===== Modal item =====
     let CURRENT_ITEM = null;
 
     async function openItem(id){
@@ -593,7 +622,6 @@
         return;
       }
       CURRENT_ITEM = res.item;
-
       fillModal_(CURRENT_ITEM);
     }
 
@@ -627,21 +655,26 @@
       $("m_notes").value = it["Observações"] || "";
 
       const role = ME?.role || "viewer";
+      const canEdit = (role === "admin" || role === "editor");
+
       const setRO = (id, ro)=>{ $(id).disabled = ro; };
 
       if (role === "viewer") {
         ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,true));
         $("btnSaveItem").disabled = true;
         $("btnSaveItem").textContent = "Sem permissão";
+        $("btnDeleteItem").classList.add("hidden");
       } else if (role === "editor") {
         ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link"].forEach(x=>setRO(x,true));
         ["m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
-        $("btnSaveItem").disabled = false;
+        $("btnSaveItem").disabled = !canEdit;
         $("btnSaveItem").textContent = "Salvar alterações";
+        $("btnDeleteItem").classList.remove("hidden");
       } else {
         ["m_title","m_authors","m_publisher","m_edition","m_year","m_lang","m_pages","m_link","m_cover","m_location","m_notes"].forEach(x=>setRO(x,false));
         $("btnSaveItem").disabled = false;
         $("btnSaveItem").textContent = "Salvar alterações";
+        $("btnDeleteItem").classList.remove("hidden");
       }
     }
 
@@ -673,67 +706,80 @@
 
       $("m_status").textContent = "✅ Salvo.";
       await carregarPagina();
+      await carregarRecentes();
+      loadStats();
+      fillModal_({
+        ...CURRENT_ITEM,
+        ...updates
+      });
     }
 
-    async function listVideoDevicesRobust_(){
-      try{
-        if (window.ZXing?.BrowserMultiFormatReader?.listVideoInputDevices) {
-          return await window.ZXing.BrowserMultiFormatReader.listVideoInputDevices();
-        }
-        if (window.ZXing?.BrowserCodeReader?.listVideoInputDevices) {
-          return await window.ZXing.BrowserCodeReader.listVideoInputDevices();
-        }
-        if (window.ZXing?.listVideoInputDevices) {
-          return await window.ZXing.listVideoInputDevices();
-        }
-      }catch(e){}
+    async function deleteItem(){
+      if (!ME || (ME.role !== "admin" && ME.role !== "editor")) return;
+      const id = $("m_id").value.trim();
+      const ok = confirm("Tem certeza que deseja excluir este item do acervo?");
+      if (!ok) return;
 
-      if (!navigator.mediaDevices?.enumerateDevices) return [];
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      return devices.filter(d => d.kind === "videoinput").map(d => ({ deviceId: d.deviceId, label: d.label || "" }));
+      $("m_status").textContent = "Excluindo...";
+      const res = await api("item_delete", { id });
+      if (!res || !res.ok) { $("m_status").textContent = res?.message || "Erro."; return; }
+
+      $("m_status").textContent = "✅ Excluído.";
+      closeModal();
+      await buscar();
+      await carregarRecentes();
+      loadStats();
     }
+
+    // ===== Manual =====
+    function openManual(){
+      alert("Cadastro manual: se quiser, eu coloco uma tela completa (form com todos os campos). Por ora, mantive simples.");
+    }
+
+    // ===== Scanner ISBN (câmera) =====
+    let __zxReader = null;
+    let __stream = null;
 
     async function abrirScanner(){
       if (!ME || !(ME.role==="admin" || ME.role==="editor")) return setStatusCadastrar_("Sem permissão.");
+
       $("scannerModal").style.display = "block";
       $("scanStatus").textContent = "Abrindo câmera…";
 
-      if (!navigator.mediaDevices?.getUserMedia) {
-        $("scanStatus").textContent = "Este navegador não suporta câmera.";
-        return;
-      }
-
-      try{
-        const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        tmp.getTracks().forEach(t=>t.stop());
-      }catch(e){
-        $("scanStatus").textContent = "Permissão negada/erro: " + (e?.message || e);
-        return;
-      }
-
-      if (!window.ZXing?.BrowserMultiFormatReader) {
-        $("scanStatus").textContent = "Scanner não carregou. Recarregue a página.";
-        return;
-      }
-
       try {
-        codeReader = new window.ZXing.BrowserMultiFormatReader();
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          $("scanStatus").textContent = "Seu navegador não suporta câmera.";
+          return;
+        }
+        if (!window.__ZXReaderClass) {
+          $("scanStatus").textContent = "Scanner não carregou. Recarregue a página.";
+          return;
+        }
 
-        const devices = await listVideoDevicesRobust_();
-        const backCam = devices.find(d => /back|traseira|rear/i.test(d.label)) || devices[0];
+        __stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false
+        });
 
-        await codeReader.decodeFromVideoDevice(backCam?.deviceId, $("video"), (result) => {
+        const video = $("video");
+        video.srcObject = __stream;
+        await video.play();
+
+        __zxReader = new window.__ZXReaderClass();
+
+        $("scanStatus").textContent = "Aponte para o código…";
+        __zxReader.decodeFromVideoElementContinuously(video, (result, err) => {
           if (result) {
-            const raw = String(result.getText ? result.getText() : result.text || "").replace(/\D/g, "");
-            if (raw.length !== 13) return;
-            $("isbn").value = raw;
-            $("scanStatus").textContent = "✅ Detectado";
-            fecharScanner();
-            $("isbn").focus();
+            const raw = String(result.getText() || "").replace(/\D/g,"");
+            if (raw.length === 13) {
+              $("isbn").value = raw;
+              $("scanStatus").textContent = "✅ Detectado";
+              fecharScanner();
+              $("isbn").focus();
+            }
           }
         });
 
-        $("scanStatus").textContent = "Aponte para o código…";
       } catch (e) {
         $("scanStatus").textContent = "Erro câmera: " + (e?.message || e);
       }
@@ -741,10 +787,17 @@
 
     function fecharScanner(){
       $("scannerModal").style.display = "none";
-      try { codeReader && codeReader.reset(); } catch(e){}
-      codeReader = null;
+      try { __zxReader && __zxReader.reset(); } catch(e){}
+      __zxReader = null;
+
+      if (__stream) {
+        try { __stream.getTracks().forEach(t => t.stop()); } catch(e){}
+        __stream = null;
+      }
+      try { $("video").srcObject = null; } catch(e){}
     }
 
+    // ===== Users (admin) =====
     async function loadUsers(){
       if (!ME || ME.role !== "admin") return;
 
@@ -771,16 +824,57 @@
         meta.textContent = `role: ${u.role} · active: ${u.active ? "TRUE":"FALSE"} · ${u.name||""}`;
         box.appendChild(meta);
 
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.marginTop = "8px";
+
+        const btn = document.createElement("button");
+        btn.className = "alt";
+        btn.textContent = "Editar";
+        btn.addEventListener("click", ()=>fillUser(u));
+
+        row.appendChild(btn);
+        box.appendChild(row);
+
         list.appendChild(box);
       });
     }
 
-    async function saveUser(){
-      if (!ME || ME.role !== "admin") return;
-      // (mantido simples aqui — se quiser reativar o editor completo, eu reponho)
-      $("usersStatus").textContent = "Use a versão completa do admin (se necessário).";
+    function fillUser(u){
+      $("u_email").value = u.email || "";
+      $("u_role").value = u.role || "viewer";
+      $("u_active").value = u.active ? "true" : "false";
+      $("u_name").value = u.name || "";
+      $("u_pin").value = "";
+      $("usersStatus").textContent = "Carregado para edição.";
     }
 
+    async function saveUser(){
+      if (!ME || ME.role !== "admin") return;
+
+      const user = {
+        email: $("u_email").value.trim().toLowerCase(),
+        role: $("u_role").value,
+        active: $("u_active").value === "true",
+        name: $("u_name").value.trim()
+      };
+      if (!user.email.includes("@")) { $("usersStatus").textContent = "Email inválido."; return; }
+
+      $("usersStatus").textContent = "Salvando…";
+      const res = await api("users_upsert", { user });
+      if (!res || !res.ok) { $("usersStatus").textContent = res?.message || "Erro."; return; }
+
+      const pin = $("u_pin").value.trim();
+      if (pin) {
+        const r2 = await api("users_set_pin", { payload: { email: user.email, pin } });
+        if (!r2 || !r2.ok) { $("usersStatus").textContent = "Usuário salvo, mas falha ao definir PIN."; return; }
+      }
+
+      $("usersStatus").textContent = `✅ ${res.action}`;
+      await loadUsers();
+    }
+
+    // ===== Stats =====
     async function loadStats(){
       if (!ME) return;
       const res = await api("stats");
@@ -794,9 +888,11 @@
       $("statsBox").innerHTML = lines.join("<br>");
     }
 
+    // ===== Escape =====
     function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
     function escAttr(s){ return esc(s).replace(/"/g,"&quot;"); }
 
+    // ===== Boot =====
     (async function boot(){
       setLoggedOutUI_("Faça login para usar.");
       initGoogleLogin();
